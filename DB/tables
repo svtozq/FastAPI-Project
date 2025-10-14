@@ -1,0 +1,32 @@
+CREATE TABLE userAccount (
+    id INT PRIMARY KEY AUTOINCREMENT,
+    last_name VARCHAR(50) NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    date DATE_TIME
+);
+
+CREATE TABLE bankAccount (
+    id INT PRIMARY KEY ,
+    user_id VARCHAR(50) NOT NULL FOREIGN KEY REFERENCES userAccount(id),
+    iban INT NOT NULL UNIQUE,
+    balance FLOAT,
+    clotured BOOLEAN
+);
+
+CREATE TABLE beneficiary (
+    id INT PRIMARY KEY,
+    bank_account ID NOT NULL FOREIGN KEY REFERENCES bankAccount(id),
+    last_name VARCHAR(50) NOT NULL FOREIGN KEY REFERENCES userAccount(last_name),
+    first_name VARCHAR(50) NOT NULL FOREIGN KEY REFERENCES userAccount(first_name)
+);
+
+CREATE TABLE transaction (
+    id INT PRIMARY KEY,
+    last_name VARCHAR(50) NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    from_account ID NOT NULL FOREIGN KEY REFERENCES bankAccount(id),
+    to_account ID NOT NULL FOREIGN KEY REFERENCES bankAccount(id),
+    balance FLOAT
+);
