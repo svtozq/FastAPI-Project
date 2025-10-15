@@ -1,6 +1,5 @@
 import datetime
 from passlib.hash import pbkdf2_sha256
-import hashlib
 import re
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -9,8 +8,6 @@ app = FastAPI()
 
 usersList = []
 usersIdList = []
-mailsList = []
-passwordsList = []
 
 class UserAccount(BaseModel):
     id : int
@@ -25,9 +22,9 @@ def signin(last_name, first_name, email, password):
     user_id = 1
     if user_id in usersIdList:
         user_id += 1
-
-    if email in mailsList:
-        raise HTTPException(status_code=400, detail="sorry this mail address is already registered !")
+    for user in usersList:
+        if user.email == email:
+            raise HTTPException(status_code=400, detail="sorry this mail address is already registered !")
 
     if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
         raise HTTPException(status_code=400, detail="try again.. your mail address isn't valid !")
@@ -40,9 +37,6 @@ def signin(last_name, first_name, email, password):
     now = datetime.datetime.now()
     user = UserAccount(id=user_id, last_name=last_name, first_name=first_name, email=email, password=hashedPassword, date=now)
     usersList.append(user)
-    usersIdList.append(user.id)
-    mailsList.append(user.email)
-    #passwordsList.append(hashedPassword)
     return {"user": user}
 
 @app.post("/login/")
@@ -50,21 +44,16 @@ def login(email, password):
     if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
         raise HTTPException(status_code=400, detail="try again.. your mail address isn't valid !")
 
-    if not email in mailsList:
-        raise HTTPException(status_code=400, detail="sorry this mail address isn't registered !")
-
-    #hashedPassword = pbkdf2_sha256.verify(password, passwordsList[0])
-    #if not hashedPassword in passwordsList:
-        raise HTTPException(status_code=400, detail="try again.. your password isn't valid !")
+    if len(usersList) > 0:
+        for user in usersList:
+            if user.email == email:
+                if not pbkdf2_sha256.verify(password, user.password):
+                    raise HTTPException(status_code=400, detail="try again.. your password is wrong !")
+            else:
+                raise HTTPException(status_code=400, detail="sorry this mail address isn't registered !")
+    else: return {"sorry this mail address isn't registered !"}
 
     return {"you successfully logged in"}
-
-@app.get("/users/mails/")
-def get_mails():
-    if mailsList:
-        return {"mails": mailsList}
-    else:
-        raise HTTPException(status_code=404, detail="sorry there's no mail address registered !")
 
 @app.get("/users/")
 def get_users():

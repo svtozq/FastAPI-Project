@@ -1,9 +1,5 @@
-from fastapi import FastAPI
 import threading
-from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session
-from DB import models
-from DB.database import SessionLocal
+from fastapi import FastAPI
 
 app = FastAPI()
 
