@@ -1,8 +1,9 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
 from .database import Base
 
+
+# -------------------- USER ACCOUNT --------------------
 class UserAccount(Base):
     __tablename__ = "useraccount"
 
@@ -17,6 +18,8 @@ class UserAccount(Base):
     bank_accounts = relationship("BankAccount", back_populates="user")
     beneficiaries = relationship("Beneficiary", back_populates="user")
 
+
+# -------------------- BANK ACCOUNT --------------------
 class BankAccount(Base):
     __tablename__ = "bankaccount"
 
@@ -34,6 +37,8 @@ class BankAccount(Base):
     received_transactions = relationship("Transaction", foreign_keys="[Transaction.to_account_id]",
                                          back_populates="to_account")
 
+
+# -------------------- BENEFICIARY --------------------
 class Beneficiary(Base):
     __tablename__ = "beneficiary"
 
@@ -63,8 +68,3 @@ class Transaction(Base):
     # Relations
     from_account = relationship("BankAccount", foreign_keys=[from_account_id], back_populates="sent_transactions")
     to_account = relationship("BankAccount", foreign_keys=[to_account_id], back_populates="received_transactions")
-
-
-
-
-

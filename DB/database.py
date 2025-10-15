@@ -2,16 +2,16 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# URL de la base SQLite
-SQLALCHEMY_DATABASE_URL = "sqlite:///./bank.db"
+# SQLite URL
+SQLALCHEMY_DATABASE_URL = "sqlite:///DB/bank.db"
 
-# Le moteur (engine) permet à SQLAlchemy de communiquer avec la BDD
+# SQLAlchemy and DB linked to communicate
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
 )
 
-# Pour créer des sessions de connexion
+# Create session
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base pour les modèles (tables)
+# Base for models tables
 Base = declarative_base()
