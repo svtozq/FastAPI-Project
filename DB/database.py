@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+"""from fastapi import FastAPI
 from pydantic import BaseModel
 from sqlmodel import Session, create_engine
 from sqlmodel import Field, SQLModel
@@ -35,7 +35,7 @@ def create_account():
             "message": "Compte créé avec succès",
             "account_number": account.iban,
             "solde : ": account.balance
-        }
+        }"""
 
 
 # -------------------- SQLALCHEMY CONFIGURATION --------------------
@@ -56,3 +56,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base pour les modèles (tables)
 Base = declarative_base()
+
+# Dépendance pour obtenir une session de BDD
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

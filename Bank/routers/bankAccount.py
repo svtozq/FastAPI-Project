@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+"""from fastapi import APIRouter, HTTPException
 from Bank.model import BankAccount  # ✅ corrigé
 from Bank.data.memory_store import (  # ✅ corrigé
     add_account,
@@ -56,4 +56,4 @@ def close_account(account_id: int):
         raise HTTPException(status_code=400, detail="Compte déjà clôturé")
 
     account.clotured = True
-    return {"message": f"Le compte {account_id} a été clôturé avec succès"}
+    return {"message": f"Le compte {account_id} a été clôturé avec succès"}"""

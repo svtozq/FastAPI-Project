@@ -1,4 +1,4 @@
-import random
+"""import random
 from fastapi import FastAPI, HTTPException
 from Bank.model import User                # ✅ corrigé
 from Bank.data.memory_store import add_user, users_db, get_user_by_email  # ✅ corrigé
@@ -29,3 +29,4 @@ def create_user(name: str, email: str):
 @app.get("/users/", response_model=list[User])
 def list_users():
     return users_db
+"""

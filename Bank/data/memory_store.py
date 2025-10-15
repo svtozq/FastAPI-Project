@@ -1,4 +1,4 @@
-from Bank.model import User, BankAccount  # ✅ corrigé
+"""from Bank.model import User, BankAccount  # ✅ corrigé
 
 # "Base de données" en mémoire
 users_db = []
@@ -26,5 +26,5 @@ def get_account_by_user(user_id: int):
 
 
 def get_active_account_by_user(user_id: int):
-    return next((a for a in accounts_db if a.user_id == user_id and not a.clotured), None)
+    return next((a for a in accounts_db if a.user_id == user_id and not a.clotured), None)"""
 
