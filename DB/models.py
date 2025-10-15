@@ -1,7 +1,8 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from .database import Base
+from DB.database import Base
+
 
 class UserAccount(Base):
     __tablename__ = "useraccount"
@@ -11,11 +12,12 @@ class UserAccount(Base):
     first_name = Column(String(50), nullable=False)
     email = Column(String(100), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
-    date = Column(DateTime)
+    date = Column(DateTime, default=datetime.utcnow)
 
- # Relations
+    # Relations
     bank_accounts = relationship("BankAccount", back_populates="user")
     beneficiaries = relationship("Beneficiary", back_populates="user")
+
 
 class BankAccount(Base):
     __tablename__ = "bankaccount"
@@ -29,10 +31,17 @@ class BankAccount(Base):
     # Relations
     user = relationship("UserAccount", back_populates="bank_accounts")
     beneficiaries = relationship("Beneficiary", back_populates="bank_account")
-    sent_transactions = relationship("Transaction", foreign_keys="[Transaction.from_account_id]",
-                                     back_populates="from_account")
-    received_transactions = relationship("Transaction", foreign_keys="[Transaction.to_account_id]",
-                                         back_populates="to_account")
+    sent_transactions = relationship(
+        "Transaction",
+        foreign_keys="[Transaction.from_account_id]",
+        back_populates="from_account"
+    )
+    received_transactions = relationship(
+        "Transaction",
+        foreign_keys="[Transaction.to_account_id]",
+        back_populates="to_account"
+    )
+
 
 class Beneficiary(Base):
     __tablename__ = "beneficiary"
@@ -58,10 +67,16 @@ class Transaction(Base):
     from_account_id = Column(Integer, ForeignKey("bankaccount.id"), nullable=False)
     to_account_id = Column(Integer, ForeignKey("bankaccount.id"), nullable=False)
     balance = Column(Float, nullable=False)
-    transaction_date = Column(DateTime)
+    transaction_date = Column(DateTime, default=datetime.utcnow)
 
     # Relations
-    from_account = relationship("BankAccount", foreign_keys=[from_account_id], back_populates="sent_transactions")
-    to_account = relationship("BankAccount", foreign_keys=[to_account_id], back_populates="received_transactions")
-
-
+    from_account = relationship(
+        "BankAccount",
+        foreign_keys=[from_account_id],
+        back_populates="sent_transactions"
+    )
+    to_account = relationship(
+        "BankAccount",
+        foreign_keys=[to_account_id],
+        back_populates="received_transactions"
+    )

@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from database import DATABASE_URL
+from DB.database import DATABASE_URL
 
 # Crée le moteur SQLAlchemy
 engine = create_engine(DATABASE_URL)
