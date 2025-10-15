@@ -1,3 +1,5 @@
+import datetime
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi import FastAPI, Depends
@@ -17,21 +19,31 @@ def get_db():
     finally:
         db.close()
 
+class UserAccount(BaseModel):
+    id : int
+    last_name : str
+    first_name : str
+    email : str
+    password : str
+    date : datetime.datetime
+
 
 # ✅ Exemple 1 : créer un utilisateur
 @app.post("/users/")
-def create_user(first_name: str, last_name: str, email: str, password: str, db: Session = Depends(get_db)):
+def create_user(last_name: str, first_name: str, email: str, password: str, db: Session = Depends(get_db)):
+    now = datetime.datetime.now()
     user = models.UserAccount(
-        first_name=first_name,
+        id=1,
         last_name=last_name,
+        first_name=first_name,
         email=email,
-        password=password
+        password=password,
+        date=now
     )
     db.add(user)
     db.commit()
     db.refresh(user)
     return user
-
 
 # ✅ Exemple 2 : afficher tous les utilisateurs
 @app.get("/users/")
