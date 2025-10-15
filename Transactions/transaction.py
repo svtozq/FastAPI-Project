@@ -1,5 +1,10 @@
 from fastapi import FastAPI
 import threading
+from fastapi import FastAPI, Depends
+from sqlalchemy.orm import Session
+from DB import models
+from DB.database import SessionLocal
+
 app = FastAPI()
 
 
@@ -55,6 +60,5 @@ def transferer_argent():
             print(f"Le solde actuel de {destinataire} est de {dico_accounts[destinataire]}")
 
 transferer_argent()
-
 
 
