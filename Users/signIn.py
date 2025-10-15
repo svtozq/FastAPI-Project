@@ -1,4 +1,5 @@
 import datetime
+from passlib.hash import pbkdf2_sha256
 import hashlib
 import re
 from fastapi import FastAPI, HTTPException
@@ -34,14 +35,14 @@ def signin(last_name, first_name, email, password):
     if not re.fullmatch(r"[A-Za-z0-9@#$%^&+=]{8,}", password):
         raise HTTPException(status_code=400, detail="try again.. your password should be at least 8 characters long !")
     else:
-        hashedPassword = hashlib.sha256(password.encode()).hexdigest()
+        hashedPassword = pbkdf2_sha256.hash(password)
 
     now = datetime.datetime.now()
     user = UserAccount(id=user_id, last_name=last_name, first_name=first_name, email=email, password=hashedPassword, date=now)
     usersList.append(user)
     usersIdList.append(user.id)
     mailsList.append(user.email)
-    passwordsList.append(hashedPassword)
+    #passwordsList.append(hashedPassword)
     return {"user": user}
 
 @app.post("/login/")
@@ -52,8 +53,8 @@ def login(email, password):
     if not email in mailsList:
         raise HTTPException(status_code=400, detail="sorry this mail address isn't registered !")
 
-    hashedPassword = hashlib.sha256(password.encode()).hexdigest()
-    if not hashedPassword in passwordsList:
+    #hashedPassword = pbkdf2_sha256.verify(password, passwordsList[0])
+    #if not hashedPassword in passwordsList:
         raise HTTPException(status_code=400, detail="try again.. your password isn't valid !")
 
     return {"you successfully logged in"}
