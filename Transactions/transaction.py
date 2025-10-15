@@ -3,7 +3,7 @@ import threading
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from DB import models
-from DB.database import SessionLocal
+
 
 app = FastAPI()
 
@@ -59,6 +59,25 @@ def transferer_argent():
             print(f"Le solde actuel de {envoyeur} est de {dico_accounts[envoyeur]}")
             print(f"Le solde actuel de {destinataire} est de {dico_accounts[destinataire]}")
 
-transferer_argent()
+#transferer_argent()
+
+
+def add_money():
+
+    compte_bancaire_utilisateur_connecté = input("qui etes vous ?")
+    while compte_bancaire_utilisateur_connecté not in dico_accounts:
+        compte_bancaire_utilisateur_connecté = input("qui etes vous ?")
+    solde_initial = dico_accounts[compte_bancaire_utilisateur_connecté]
+
+    montant_voulu = input("combien d'argent voulez vous transférer?")
+    while int(montant_voulu) < 0 :
+        montant_voulu = input("combien d'argent voulez vous transférer?")
+
+
+    dico_accounts[compte_bancaire_utilisateur_connecté] += int(montant_voulu)
+
+    print(f"Votre solde etait de {solde_initial}€.Actuellement, il est de {dico_accounts[compte_bancaire_utilisateur_connecté]}€")
+
+#add_money()
 
 
