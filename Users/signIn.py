@@ -1,13 +1,14 @@
 import datetime
-from passlib.hash import pbkdf2_sha256
 import re
+from passlib.hash import pbkdf2_sha256
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from fastapi import FastAPI, Depends
+from sqlalchemy.orm import Session
+from DB.database import SessionLocal, engine
+from DB import models
 
 app = FastAPI()
-
-usersList = []
-usersIdList = []
 
 class UserAccount(BaseModel):
     id : int
@@ -17,14 +18,23 @@ class UserAccount(BaseModel):
     password : str
     date : datetime.datetime
 
-@app.post("/signin/")
-def signin(last_name, first_name, email, password):
-    user_id = 1
-    if user_id in usersIdList:
-        user_id += 1
-    for user in usersList:
-        if user.email == email:
-            raise HTTPException(status_code=400, detail="sorry this mail address is already registered !")
+models.Base.metadata.create_all(bind=engine)
+
+# Get database session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@app.post("/users/")
+def create_user(last_name: str, first_name: str, email: str, password: str, db: Session = Depends(get_db)):
+    count = db.query(models.UserAccount).filter(models.UserAccount.email == email).count()
+
+    if count > 0:
+        raise HTTPException(status_code=400, detail="Email already registered")
 
     if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
         raise HTTPException(status_code=400, detail="try again.. your mail address isn't valid !")
@@ -35,29 +45,42 @@ def signin(last_name, first_name, email, password):
         hashedPassword = pbkdf2_sha256.hash(password)
 
     now = datetime.datetime.now()
-    user = UserAccount(id=user_id, last_name=last_name, first_name=first_name, email=email, password=hashedPassword, date=now)
-    usersList.append(user)
+
+    user = models.UserAccount(
+        last_name=last_name,
+        first_name=first_name,
+        email=email,
+        password=hashedPassword,
+        date=now
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
     return {"user": user}
 
+
 @app.post("/login/")
-def login(email, password):
-    if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
+def login(email, password, db: Session = Depends(get_db)):
+    if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email, ):
         raise HTTPException(status_code=400, detail="try again.. your mail address isn't valid !")
 
-    if len(usersList) > 0:
-        for user in usersList:
-            if user.email == email:
-                if not pbkdf2_sha256.verify(password, user.password):
-                    raise HTTPException(status_code=400, detail="try again.. your password is wrong !")
-            else:
-                raise HTTPException(status_code=400, detail="sorry this mail address isn't registered !")
-    else: return {"sorry this mail address isn't registered !"}
+    user = db.query(models.UserAccount).filter(models.UserAccount.email == email).first()
+
+    if user is None:
+        raise HTTPException(status_code=400, detail="sorry this mail address isn't registered !")
+    else:
+        if not pbkdf2_sha256.verify(password, user.password):
+            raise HTTPException(status_code=400, detail="try again.. your password is wrong !")
 
     return {"you successfully logged in"}
 
+
 @app.get("/users/")
-def get_users():
-    if usersList:
-        return {"users": usersList}
+def get_users(db: Session = Depends(get_db)):
+    users = db.query(models.UserAccount).all()
+
+    if len(users) > 0:
+        return {"users": users}
     else:
-        raise HTTPException(status_code=404, detail="sorry there's no user registered !")
+        return {"no users found"}
