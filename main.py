@@ -78,7 +78,7 @@ def me(user=Depends(get_user)):
     return user
 
 
-@app.post("/users/")
+@app.post("/signin/")
 def create_user(last_name: str, first_name: str, email: str, password: str, db: Session = Depends(get_db)):
     count = db.query(models.UserAccount).filter(models.UserAccount.email == email).count()
 
@@ -118,7 +118,8 @@ def create_user(last_name: str, first_name: str, email: str, password: str, db: 
     db.commit()
     db.refresh(bank)
 
-    return user, bank
+    token = generate_token(user)
+    return {"you're successfully logged in !"}, {"your token": token}, {user}, {bank}
 
 
 @app.post("/login/")
@@ -135,7 +136,16 @@ def login(email, password, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="try again.. your password is wrong !")
 
     token = generate_token(user)
-    return {"your token": token}
+    return {"you're successfully logged in !"}, {"your token": token}
+
+
+@app.get("/user/")
+def get_user_info (user=Depends(get_user), db: Session = Depends(get_db)):
+    user = db.query(models.UserAccount).filter(models.UserAccount.id == user["user_id"]).first()
+    if user is not None:
+        return {user.last_name}, {user.first_name}, {user.email}
+    else:
+        return {"no user found"}
 
 
 @app.get("/users/")
@@ -189,10 +199,10 @@ def get_accounts(db: Session = Depends(get_db)):
 
 # ✅ GET - Voir un compte par ID
 @app.get("/accounts/{account_id}")
-def get_account(account_id: int, db: Session = Depends(get_db)):
-    account = db.query(models.BankAccount).filter(models.BankAccount.id == account_id).first()
+def get_account(user=Depends(get_user), db: Session = Depends(get_db)):
+    account = db.query(models.BankAccount).filter(models.BankAccount.user_id == user["user_id"], models.BankAccount.clotured == False).all()
     if not account:
-        raise HTTPException(status_code=404, detail="Compte introuvable")
+        raise HTTPException(status_code=404, detail="Comptes introuvables")
     return account
 
 

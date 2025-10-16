@@ -1,35 +1,80 @@
 import datetime
+import random
 import re
 from passlib.hash import pbkdf2_sha256
-from fastapi import FastAPI, HTTPException
+import jwt
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-from DB.database import SessionLocal, engine
+from DB.database import engine, get_db
 from DB import models
+#Pour importer depuis ma methode transaction
+from Transactions.transactionDB import router as transactions_router
 
+
+# Création automatique des tables dans la base SQLite
+models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
+# Ouali lie mon code au main via router
+app.include_router(transactions_router)
+
 
 class UserAccount(BaseModel):
-    id : int
-    last_name : str
-    first_name : str
-    email : str
-    password : str
-    date : datetime.datetime
+    id: int
+    last_name: str
+    first_name: str
+    email: str
+    password: str
+    date: datetime.datetime
 
-models.Base.metadata.create_all(bind=engine)
+    class Config:
+        orm_mode = True
 
-# Get database session
-def get_db():
-    db = SessionLocal()
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class BankAccount(BaseModel):
+    id: int
+    user_id: int
+    iban: str
+    balance: float
+    clotured: bool
+
+    class Config:
+        orm_mode = True
+
+
+secret_key = "very_secret_key"
+algorithm = "HS256"
+
+bearer_scheme = HTTPBearer()
+
+def get_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+    token = credentials.credentials
     try:
-        yield db
-    finally:
-        db.close()
+        payload = jwt.decode(token, secret_key, algorithms=[algorithm])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="Token expired !")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=400, detail="Invalid token !")
+
+def generate_token(user: UserAccount):
+    payload = {
+        "sub": user.email,
+        "user_id": user.id,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+    }
+    return jwt.encode(payload, secret_key, algorithm=algorithm)
+
+@app.get("/me")
+def me(user=Depends(get_user)):
+    return user
 
 
-@app.post("/users/")
+@app.post("/signin/")
 def create_user(last_name: str, first_name: str, email: str, password: str, db: Session = Depends(get_db)):
     count = db.query(models.UserAccount).filter(models.UserAccount.email == email).count()
 
@@ -57,7 +102,19 @@ def create_user(last_name: str, first_name: str, email: str, password: str, db: 
     db.commit()
     db.refresh(user)
 
-    return {"user": user}
+    iban = "FR" + str(random.randint(10, 99)) + str(random.randrange(10 ** 11, 10 ** 12))
+
+    bank = models.BankAccount(
+        user_id=user.id,
+        iban=iban,
+        balance=0,
+        clotured=False,
+    )
+    db.add(bank)
+    db.commit()
+    db.refresh(bank)
+
+    return {user}, {bank}
 
 
 @app.post("/login/")
@@ -73,13 +130,22 @@ def login(email, password, db: Session = Depends(get_db)):
         if not pbkdf2_sha256.verify(password, user.password):
             raise HTTPException(status_code=400, detail="try again.. your password is wrong !")
 
-    return {"you successfully logged in"}
+    token = generate_token(user)
+    return {"you're successfully logged in !"}, {"your token": token}
+
+
+@app.get("/user/")
+def get_user_info (user=Depends(get_user), db: Session = Depends(get_db)):
+    user = db.query(models.UserAccount).filter(models.UserAccount.id == user["user_id"]).first()
+    if user is not None:
+        return {user.last_name}, {user.first_name}, {user.email}
+    else:
+        return {"no user found"}
 
 
 @app.get("/users/")
 def get_users(db: Session = Depends(get_db)):
     users = db.query(models.UserAccount).all()
-
     if len(users) > 0:
         return {"users": users}
     else:
