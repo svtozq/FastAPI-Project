@@ -22,6 +22,9 @@ def add_money(account_id : int, amount: float,db:Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Le compte est clôturé")
 
     account.balance += amount
+
+    db.commit()
+    db.refresh(account)
     return {
         "message": f"{amount}€ on été ajouté a votre compte : {account.iban}.",
         "new_balance": account.balance
