@@ -41,7 +41,20 @@ def transferer_argent():
     else:
         print("Transfers annulé")
 
-transferer_argent()
+#transferer_argent()
 
 
+def add_money():
+
+    compte_bancaire_utilisateur_connecté = input("qui etes vous ?")
+    while compte_bancaire_utilisateur_connecté not in dico_accounts:
+        envoyeur = input("qui etes vous ?")
+    montant_voulu = input("combien d'argent voulez vous transférer?")
+
+
+    dico_accounts[compte_bancaire_utilisateur_connecté] += int(montant_voulu)
+
+    print(f"Votre solde actuel est de {compte_bancaire_utilisateur_connecté}���")
+
+add_money()
 
