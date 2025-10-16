@@ -7,6 +7,7 @@ from DB.database import SessionLocal, engine, get_db
 from DB import models
 #Pour importer depuis ma methode transaction
 from Transactions.transactionDB import router as transactions_router
+from Transactions.add_money import router as add_money_router
 
 
 
@@ -16,6 +17,9 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 # Ouali lie mon code au main via router
 app.include_router(transactions_router)
+
+#route pour add_user
+app.include_router(add_money_router)
 
 
 class UserAccount(BaseModel):
