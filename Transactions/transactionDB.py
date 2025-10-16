@@ -11,8 +11,8 @@ def transfer_money(from_account_id: int, to_account_id: int, amount: float, db: 
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Le montant doit être supérieur à 0")
 
-    """if from_account_id == to_account_id:
-        raise HTTPException(status_code=400, detail="Impossible de transférer vers le même compte")"""
+    if from_account_id == to_account_id:
+        raise HTTPException(status_code=400, detail="Impossible de transférer vers le même compte")
 
     # Récupérer les comptes
     from_account = db.query(models.BankAccount).filter(models.BankAccount.id == from_account_id).first()
