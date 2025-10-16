@@ -47,10 +47,12 @@ class Beneficiary(Base):
     user_id = Column(Integer, ForeignKey("useraccount.id"), nullable=False)
     last_name = Column(String(50), nullable=False)
     first_name = Column(String(50), nullable=False)
+    Beneficiary_date = Column(DateTime)
 
     # Relations
     bank_account = relationship("BankAccount", back_populates="beneficiaries")
     user = relationship("UserAccount", back_populates="beneficiaries")
+
 
 
 # -------------------- TRANSACTION --------------------
@@ -58,8 +60,8 @@ class Transaction(Base):
     __tablename__ = "transaction"
 
     id = Column(Integer, primary_key=True, index=True)
-    last_name = Column(String(50), nullable=True)
-    first_name = Column(String(50), nullable=True)
+    sender_last_name = Column(String(50), nullable=True)
+    sender_first_name = Column(String(50), nullable=True)
     from_account_id = Column(Integer, ForeignKey("bankaccount.id"), nullable=False)
     to_account_id = Column(Integer, ForeignKey("bankaccount.id"), nullable=False)
     message = Column(String(255), nullable=True)

@@ -12,6 +12,7 @@ from Transactions.transactionDB import router as transactions_router
 from Transactions.add_money import router as add_money_router
 from Users.signIn import router as login_router
 from Bank.BankAccount import router as Bank_router
+from Beneficiaries.beneficiary import router as Beneficiaries_router
 
 
 
@@ -28,6 +29,8 @@ app.include_router(add_money_router)
 app.include_router(login_router)
 #Route pour le bank account
 app.include_router(Bank_router)
+#Route pour les benefiary
+app.include_router(Beneficiaries_router)
 
 
 

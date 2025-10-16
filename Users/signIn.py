@@ -110,7 +110,8 @@ def create_user(last_name: str, first_name: str, email: str, password: str, db: 
     db.commit()
     db.refresh(bank)
 
-    return user, bank
+    token = generate_token(user)
+    return {"you're successfully logged in !"}, {"your token": token}, {user}, {bank}
 
 
 @router.post("/login/")
@@ -128,6 +129,14 @@ def login(email, password, db: Session = Depends(get_db)):
 
     token = generate_token(user)
     return {"your token": token}
+
+@router.get("/user/")
+def get_user_info (user=Depends(get_user), db: Session = Depends(get_db)):
+    user = db.query(models.UserAccount).filter(models.UserAccount.id == user["user_id"]).first()
+    if user is not None:
+        return {user.last_name}, {user.first_name}, {user.email}
+    else:
+        return {"no user found"}
 
 
 @router.get("/users/")

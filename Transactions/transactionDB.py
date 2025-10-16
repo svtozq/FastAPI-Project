@@ -28,6 +28,7 @@ def transfer_money(message: str,to_account_id: int, amount: float, user=Depends(
 
     # Récupérer les comptes
     to_account = db.query(models.BankAccount).filter(models.BankAccount.id == to_account_id).first()
+    to_account_user = db.query(models.UserAccount).filter(models.UserAccount.id == to_account_id).first()
 
     if not user["user_id"] or not to_account:
         raise HTTPException(status_code=404, detail="Compte introuvable")
@@ -44,8 +45,8 @@ def transfer_money(message: str,to_account_id: int, amount: float, user=Depends(
 
     # 🔹 Enregistrer la transaction
     transaction = models.Transaction(
-        last_name="N/A",
-        first_name="N/A",
+        sender_last_name=to_account_user.last_name,
+        sender_first_name=to_account_user.first_name,
         from_account_id=from_account.id,
         to_account_id=to_account.id,
         message=message,
@@ -86,8 +87,8 @@ def get_history_transaction(user=Depends(get_user), db: Session = Depends(get_db
     return [
         {
             "id": t.id,
-            "first_name": t.first_name,
-            "last_name": t.last_name,
+            "sender_first_name": t.sender_first_name,
+            "sender_last_name": t.sender_last_name,
             "from_account_id": t.from_account_id,
             "to_account_id": t.to_account_id,
             "amount": t.balance,
