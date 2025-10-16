@@ -56,8 +56,8 @@ def create_user(last_name: str, first_name: str, email: str, password: str, db: 
         hashedPassword = pbkdf2_sha256.hash(password)
 
     now = datetime.datetime.now()
+
     user = models.UserAccount(
-        id=1,
         last_name=last_name,
         first_name=first_name,
         email=email,
@@ -68,7 +68,19 @@ def create_user(last_name: str, first_name: str, email: str, password: str, db: 
     db.commit()
     db.refresh(user)
 
-    return {"user": user}
+    iban = "FR" + str(random.randint(10, 99)) + str(random.randrange(10 ** 11, 10 ** 12))
+
+    bank = models.BankAccount(
+        user_id=user.id,
+        iban=iban,
+        balance=0,
+        clotured=False,
+    )
+    db.add(bank)
+    db.commit()
+    db.refresh(bank)
+
+    return user, bank
 
 
 @app.post("/login/")
