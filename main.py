@@ -2,6 +2,8 @@ import datetime
 import random
 import re
 from passlib.hash import pbkdf2_sha256
+import jwt
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi import FastAPI, Depends, HTTPException
@@ -10,6 +12,7 @@ from DB.database import SessionLocal, engine, get_db
 from DB import models
 #Pour importer depuis ma methode transaction
 from Transactions.transactionDB import router as transactions_router
+
 
 
 
@@ -29,6 +32,13 @@ class UserAccount(BaseModel):
     password: str
     date: datetime.datetime
 
+    class Config:
+        orm_mode = True
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
 class BankAccount(BaseModel):
     id: int
     user_id: int
@@ -38,6 +48,34 @@ class BankAccount(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+secret_key = "very_secret_key"
+algorithm = "HS256"
+
+bearer_scheme = HTTPBearer()
+
+def get_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=[algorithm])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="Token expired !")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=400, detail="Invalid token !")
+
+def generate_token(user: UserAccount):
+    payload = {
+        "sub": user.email,
+        "user_id": user.id,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+    }
+    return jwt.encode(payload, secret_key, algorithm=algorithm)
+
+@app.get("/me")
+def me(user=Depends(get_user)):
+    return user
 
 
 @app.post("/users/")
@@ -96,7 +134,8 @@ def login(email, password, db: Session = Depends(get_db)):
         if not pbkdf2_sha256.verify(password, user.password):
             raise HTTPException(status_code=400, detail="try again.. your password is wrong !")
 
-    return {"you successfully logged in"}
+    token = generate_token(user)
+    return {"your token": token}
 
 
 @app.get("/users/")
