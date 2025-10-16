@@ -1,35 +1,74 @@
 import datetime
 import re
+import jwt
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.hash import pbkdf2_sha256
-from fastapi import FastAPI, HTTPException
+from fastapi import  HTTPException, APIRouter
 from pydantic import BaseModel
-from fastapi import FastAPI, Depends
+from fastapi import  Depends
 from sqlalchemy.orm import Session
-from DB.database import SessionLocal, engine
+from DB.database import get_db
 from DB import models
 
-app = FastAPI()
+
+router = APIRouter(prefix="/signIn", tags=["Users"])
 
 class UserAccount(BaseModel):
-    id : int
-    last_name : str
-    first_name : str
-    email : str
-    password : str
-    date : datetime.datetime
+    id: int
+    last_name: str
+    first_name: str
+    email: str
+    password: str
+    date: datetime.datetime
 
-models.Base.metadata.create_all(bind=engine)
+    class Config:
+        orm_mode = True
 
-# Get database session
-def get_db():
-    db = SessionLocal()
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class BankAccount(BaseModel):
+    id: int
+    user_id: int
+    iban: str
+    balance: float
+    clotured: bool
+
+    class Config:
+        orm_mode = True
+
+
+secret_key = "very_secret_key"
+algorithm = "HS256"
+
+bearer_scheme = HTTPBearer()
+
+def get_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+    token = credentials.credentials
     try:
-        yield db
-    finally:
-        db.close()
+        payload = jwt.decode(token, secret_key, algorithms=[algorithm])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="Token expired !")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=400, detail="Invalid token !")
+
+def generate_token(user: UserAccount):
+    payload = {
+        "sub": user.email,
+        "user_id": user.id,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+    }
+    return jwt.encode(payload, secret_key, algorithm=algorithm)
+
+@router.get("/me")
+def me(user=Depends(get_user)):
+    return user
 
 
-@app.post("/users/")
+
+@router.post("/users/")
 def create_user(last_name: str, first_name: str, email: str, password: str, db: Session = Depends(get_db)):
     count = db.query(models.UserAccount).filter(models.UserAccount.email == email).count()
 
@@ -60,7 +99,7 @@ def create_user(last_name: str, first_name: str, email: str, password: str, db: 
     return {"user": user}
 
 
-@app.post("/login/")
+@router.post("/login/")
 def login(email, password, db: Session = Depends(get_db)):
     if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email, ):
         raise HTTPException(status_code=400, detail="try again.. your mail address isn't valid !")
@@ -73,10 +112,11 @@ def login(email, password, db: Session = Depends(get_db)):
         if not pbkdf2_sha256.verify(password, user.password):
             raise HTTPException(status_code=400, detail="try again.. your password is wrong !")
 
-    return {"you successfully logged in"}
+    token = generate_token(user)
+    return {"your token": token}
 
 
-@app.get("/users/")
+@router.get("/users/")
 def get_users(db: Session = Depends(get_db)):
     users = db.query(models.UserAccount).all()
 
