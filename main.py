@@ -141,10 +141,10 @@ def login(email, password, db: Session = Depends(get_db)):
 @app.get("/users/")
 def get_users(db: Session = Depends(get_db)):
     users = db.query(models.UserAccount).all()
-    return users
-
-
-
+    if len(users) > 0:
+        return {"users": users}
+    else:
+        return {"no users found"}
 
 
 "Partie de Lenny pour les comptes bancaires"
@@ -209,20 +209,3 @@ def close_account(account_id: int, db: Session = Depends(get_db)):
     account.clotured = True
     db.commit()
     return {"message": f"Le compte {account_id} a été clôturé avec succès"}
-
-
-class Item(BaseModel):
-    name: str
-    description: str
-    price: float
-    tax: float
-
-
-@app.get("/users/")
-def get_users(db: Session = Depends(get_db)):
-    users = db.query(models.UserAccount).all()
-
-    if len(users) > 0:
-        return {"users": users}
-    else:
-        return {"no users found"}
