@@ -1,5 +1,7 @@
 import datetime
 import re
+import random
+
 import jwt
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.hash import pbkdf2_sha256
@@ -68,7 +70,7 @@ def me(user=Depends(get_user)):
 
 
 
-@router.post("/users/")
+@router.post("/signin/")
 def create_user(last_name: str, first_name: str, email: str, password: str, db: Session = Depends(get_db)):
     count = db.query(models.UserAccount).filter(models.UserAccount.email == email).count()
 
@@ -96,7 +98,19 @@ def create_user(last_name: str, first_name: str, email: str, password: str, db: 
     db.commit()
     db.refresh(user)
 
-    return {"user": user}
+    iban = "FR" + str(random.randint(10, 99)) + str(random.randrange(10 ** 11, 10 ** 12))
+
+    bank = models.BankAccount(
+        user_id=user.id,
+        iban=iban,
+        balance=0,
+        clotured=False,
+    )
+    db.add(bank)
+    db.commit()
+    db.refresh(bank)
+
+    return user, bank
 
 
 @router.post("/login/")

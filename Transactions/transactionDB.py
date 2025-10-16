@@ -1,28 +1,35 @@
 from datetime import datetime
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 
 from sqlalchemy import or_, desc
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from DB import models
 from DB.database import get_db
+from Users.signIn import get_user
+
 
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 
 @router.post("/")
-def transfer_money(from_account_id: int, to_account_id: int, amount: float, db: Session = Depends(get_db)):
+def transfer_money(message: str,to_account_id: int, amount: float, user=Depends(get_user),db: Session = Depends(get_db)):
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Le montant doit être supérieur à 0")
 
-    if from_account_id == to_account_id:
+    # 🔹 Récupérer le compte bancaire de l'utilisateur connecté (compte source)
+    from_account = db.query(models.BankAccount).filter(models.BankAccount.user_id == user["user_id"]).first()
+
+    if not from_account:
+        raise HTTPException(status_code=404, detail="Compte de l'utilisateur non trouvé")
+
+    if user["user_id"] == to_account_id:
         raise HTTPException(status_code=400, detail="Impossible de transférer vers le même compte")
 
     # Récupérer les comptes
-    from_account = db.query(models.BankAccount).filter(models.BankAccount.id == from_account_id).first()
     to_account = db.query(models.BankAccount).filter(models.BankAccount.id == to_account_id).first()
 
-    if not from_account or not to_account:
+    if not user["user_id"] or not to_account:
         raise HTTPException(status_code=404, detail="Compte introuvable")
 
     if from_account.clotured or to_account.clotured:
@@ -39,8 +46,9 @@ def transfer_money(from_account_id: int, to_account_id: int, amount: float, db: 
     transaction = models.Transaction(
         last_name="N/A",
         first_name="N/A",
-        from_account_id=from_account_id,
-        to_account_id=to_account_id,
+        from_account_id=from_account.id,
+        to_account_id=to_account.id,
+        message=message,
         balance=amount,
         transaction_date=datetime.utcnow()
     )
@@ -57,11 +65,18 @@ def transfer_money(from_account_id: int, to_account_id: int, amount: float, db: 
     }
 
 @router.get("/history/")
-def get_history_transaction(user_id: int, db: Session = Depends(get_db)):
+def get_history_transaction(user=Depends(get_user), db: Session = Depends(get_db)):
+
+    account = db.query(models.BankAccount).filter(models.BankAccount.user_id == user["user_id"]).first()
+
+    if not account:
+        raise HTTPException(status_code=404, detail="Compte utilisateur introuvable")
+
+
     transactions = db.query(models.Transaction).filter(
         or_(
-            models.Transaction.from_account_id == user_id,
-            models.Transaction.to_account_id == user_id
+            models.Transaction.from_account_id == account.id,
+            models.Transaction.to_account_id == account.id
         )
     ).order_by(desc(models.Transaction.transaction_date)).all()
 
@@ -76,7 +91,43 @@ def get_history_transaction(user_id: int, db: Session = Depends(get_db)):
             "from_account_id": t.from_account_id,
             "to_account_id": t.to_account_id,
             "amount": t.balance,
+            "message":t.message,
             "transaction_date": t.transaction_date.strftime("%Y-%m-%d %H:%M:%S") if t.transaction_date else None
         }
         for t in transactions
+    ]
+
+
+
+
+@router.get("/history_id/")
+def get_transaction_Byid(id: int,user=Depends(get_user), db: Session = Depends(get_db)):
+
+    if not id:
+        raise HTTPException(status_code=404, detail="Transaction introuvable")
+
+
+    t = db.query(models.Transaction).filter(
+        and_(
+            models.Transaction.id == id,
+        or_(
+            models.Transaction.from_account_id == user["user_id"],
+            models.Transaction.to_account_id == user["user_id"]
+        ))
+    ).first()
+
+    if not t:
+        raise HTTPException(status_code=404, detail="Aucune transaction trouvée pour cet utilisateur")
+
+    return [
+        {
+            "id": t.id,
+            "first_name": t.first_name,
+            "last_name": t.last_name,
+            "from_account_id": t.from_account_id,
+            "to_account_id": t.to_account_id,
+            "amount": t.balance,
+            "message":t.message,
+            "transaction_date": t.transaction_date.strftime("%Y-%m-%d %H:%M:%S") if t.transaction_date else None
+        }
     ]
