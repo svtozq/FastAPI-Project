@@ -46,6 +46,7 @@ algorithm = "HS256"
 
 bearer_scheme = HTTPBearer()
 
+# Get token and decode it to get values
 def get_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     token = credentials.credentials
     try:
@@ -56,6 +57,7 @@ def get_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme))
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=400, detail="Invalid token !")
 
+# Create a token which stocks values in dict
 def generate_token(user: UserAccount):
     payload = {
         "sub": user.email,
@@ -64,10 +66,10 @@ def generate_token(user: UserAccount):
     }
     return jwt.encode(payload, secret_key, algorithm=algorithm)
 
+# Get connected user
 @router.get("/me")
 def me(user=Depends(get_user)):
     return user
-
 
 
 @router.post("/signin/")
@@ -87,6 +89,7 @@ def create_user(last_name: str, first_name: str, email: str, password: str, db: 
 
     now = datetime.datetime.now()
 
+    # Insert the new user
     user = models.UserAccount(
         last_name=last_name,
         first_name=first_name,
@@ -100,6 +103,7 @@ def create_user(last_name: str, first_name: str, email: str, password: str, db: 
 
     iban = "FR" + str(random.randint(10, 99)) + str(random.randrange(10 ** 11, 10 ** 12))
 
+    # Insert his principal bank account
     bank = models.BankAccount(
         user_id=user.id,
         iban=iban,
@@ -110,6 +114,7 @@ def create_user(last_name: str, first_name: str, email: str, password: str, db: 
     db.commit()
     db.refresh(bank)
 
+    # Gen his token
     token = generate_token(user)
     return {"you're successfully logged in !"}, {"your token": token}, {user}, {bank}
 

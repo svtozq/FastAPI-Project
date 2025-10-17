@@ -12,6 +12,7 @@ from Users.signIn import get_user
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 
+# Fonction qui permet de transferer de l'argent du compte connecter a un compte existant
 @router.post("/")
 def transfer_money(message: str,to_account_id: int, amount: float, user=Depends(get_user),db: Session = Depends(get_db)):
     if amount <= 0:
@@ -20,6 +21,7 @@ def transfer_money(message: str,to_account_id: int, amount: float, user=Depends(
     # 🔹 Récupérer le compte bancaire de l'utilisateur connecté (compte source)
     from_account = db.query(models.BankAccount).filter(models.BankAccount.user_id == user["user_id"]).first()
 
+    #Condition
     if not from_account:
         raise HTTPException(status_code=404, detail="Compte de l'utilisateur non trouvé")
 
@@ -53,6 +55,8 @@ def transfer_money(message: str,to_account_id: int, amount: float, user=Depends(
         balance=amount,
         transaction_date=datetime.utcnow()
     )
+
+    # Met a jour la base de donnée
     db.add(transaction)
 
     db.commit()
@@ -65,15 +69,19 @@ def transfer_money(message: str,to_account_id: int, amount: float, user=Depends(
         "to_account_balance": to_account.balance
     }
 
+
+# Fonction qui enregistre la transaction
 @router.get("/history/")
 def get_history_transaction(user=Depends(get_user), db: Session = Depends(get_db)):
 
+    # 🔹 Récupérer le compte bancaire de l'utilisateur connecté (compte source)
     account = db.query(models.BankAccount).filter(models.BankAccount.user_id == user["user_id"]).first()
 
+    # Condition
     if not account:
         raise HTTPException(status_code=404, detail="Compte utilisateur introuvable")
 
-
+    # Requete qui recupere l'utilisateur qui est en lien avec la transaction
     transactions = db.query(models.Transaction).filter(
         or_(
             models.Transaction.from_account_id == account.id,
@@ -101,13 +109,15 @@ def get_history_transaction(user=Depends(get_user), db: Session = Depends(get_db
 
 
 
+
+# Cette fonction recupere une transaction en particulier et ces informations du user connecté
 @router.get("/history_id/")
 def get_transaction_Byid(id: int,user=Depends(get_user), db: Session = Depends(get_db)):
 
     if not id:
         raise HTTPException(status_code=404, detail="Transaction introuvable")
 
-
+    # Requete qui recupere l'utilisateur connecté et l'utilisateur en lien avec la transaction
     t = db.query(models.Transaction).filter(
         and_(
             models.Transaction.id == id,
@@ -123,8 +133,8 @@ def get_transaction_Byid(id: int,user=Depends(get_user), db: Session = Depends(g
     return [
         {
             "id": t.id,
-            "first_name": t.first_name,
-            "last_name": t.last_name,
+            "first_name": t.sender_first_name,
+            "last_name": t.sender_last_name,
             "from_account_id": t.from_account_id,
             "to_account_id": t.to_account_id,
             "amount": t.balance,
