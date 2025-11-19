@@ -27,7 +27,9 @@ app = FastAPI()
 # middleware CORS pour autorisé l'échange entre le back et le front
 origins = [
     "http://localhost:5173",  # URL de ton front
-    "http://127.0.0.1:5173"
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+
 ]
 
 app.add_middleware(

@@ -3,8 +3,7 @@ from fastapi import FastAPI, Depends, HTTPException, APIRouter
 from sqlalchemy.orm import Session
 from DB.database import engine, get_db
 from DB import models
-from Users.signIn import get_user
-
+from Users.signIn import get_user, get_user_bank
 
 router = APIRouter(prefix="/Bank", tags=["BankAccount"])
 
@@ -51,6 +50,25 @@ def get_account(user=Depends(get_user), db: Session = Depends(get_db)):
     if not account:
         raise HTTPException(status_code=404, detail="Comptes introuvables")
     return account
+
+
+@router.get("/accounts/me")
+def get_user_accounts(user=Depends(get_user), db: Session = Depends(get_db)):
+    db_user = db.query(models.UserAccount).filter(models.UserAccount.id == user["user_id"]).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+
+    accounts = db.query(models.BankAccount).filter(models.BankAccount.user_id == db_user.id).all()
+
+    return {
+        "user": {
+            "id": db_user.id,
+            "email": db_user.email,
+            "firstname": db_user.first_name,
+            "lastname": db_user.last_name
+        },
+        "accounts": accounts
+    }
 
 
 # ✅ PUT - Clôturer un compte

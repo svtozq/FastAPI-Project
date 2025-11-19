@@ -64,6 +64,23 @@ def generate_token(user: UserAccount):
     }
     return jwt.encode(payload, secret_key, algorithm=algorithm)
 
+def get_user_bank(db: Session = Depends(get_db), token=Depends(bearer_scheme)):
+    payload = jwt.decode(token, secret_key, algorithms=[algorithm])
+    user_id = payload.get("user_id")
+
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+
+    return {
+        "user_id": user.id,
+        "email": user.email,
+        "firstname": user.firstname,
+        "lastname": user.lastname
+    }
+
+
 # Get connected user
 @router.get("/me")
 def me(user=Depends(get_user)):
@@ -149,12 +166,17 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         "token": token,}
 
 @router.get("/user/")
-def get_user_info (user=Depends(get_user), db: Session = Depends(get_db)):
-    user = db.query(models.UserAccount).filter(models.UserAccount.id == user["user_id"]).first()
-    if user is not None:
-        return {user.last_name}, {user.first_name}, {user.email}
+def get_user_info(user=Depends(get_user), db: Session = Depends(get_db)):
+    db_user = db.query(models.UserAccount).filter(models.UserAccount.id == user["user_id"]).first()
+    if db_user:
+        return {
+            "last_name": db_user.last_name,
+            "first_name": db_user.first_name,
+            "email": db_user.email
+        }
     else:
-        return {"no user found"}
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+
 
 
 @router.get("/users/")
