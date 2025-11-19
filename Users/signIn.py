@@ -13,15 +13,13 @@ from DB.database import get_db
 from DB import models
 
 
-router = APIRouter(prefix="/signIn", tags=["Users"])
+router = APIRouter(prefix="/user", tags=["Users"])
 
 class UserAccount(BaseModel):
-    id: int
     last_name: str
     first_name: str
     email: str
     password: str
-    date: datetime.datetime
 
     class Config:
         orm_mode = True
@@ -73,7 +71,12 @@ def me(user=Depends(get_user)):
 
 
 @router.post("/signin/")
-def create_user(last_name: str, first_name: str, email: str, password: str, db: Session = Depends(get_db)):
+def create_user(request: UserAccount, db: Session = Depends(get_db)):
+    last_name = request.last_name
+    first_name = request.first_name
+    email = request.email
+    password = request.password
+
     count = db.query(models.UserAccount).filter(models.UserAccount.email == email).count()
 
     if count > 0:
@@ -116,11 +119,19 @@ def create_user(last_name: str, first_name: str, email: str, password: str, db: 
 
     # Gen his token
     token = generate_token(user)
-    return {"you're successfully logged in !"}, {"your token": token}, {user}, {bank}
+    return {
+        "message": "you're successfully logged in !",
+        "token": token,
+        "user": user,
+        "bank": bank
+    }
 
 
 @router.post("/login/")
-def login(email, password, db: Session = Depends(get_db)):
+def login(request: LoginRequest, db: Session = Depends(get_db)):
+    email = request.email
+    password = request.password
+
     if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email, ):
         raise HTTPException(status_code=400, detail="try again.. your mail address isn't valid !")
 
@@ -133,7 +144,9 @@ def login(email, password, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="try again.. your password is wrong !")
 
     token = generate_token(user)
-    return {"your token": token}
+    return {
+        "message": "you're successfully logged in !",
+        "token": token,}
 
 @router.get("/user/")
 def get_user_info (user=Depends(get_user), db: Session = Depends(get_db)):
