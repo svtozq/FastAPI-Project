@@ -1,6 +1,5 @@
 from datetime import datetime
 from sqlalchemy import or_, and_
-
 from sqlalchemy import or_, desc
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
@@ -69,6 +68,60 @@ def transfer_money(message: str,to_account_id: int, amount: float, user=Depends(
         "to_account_balance": to_account.balance
     }
 
+
+"""#methode de transfert qui n'a pas besoin de connectionn pour tester
+@router.post("/")
+def transfer_money(message: str, to_account_id: int, amount: float, db: Session = Depends(get_db)):
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Le montant doit être supérieur à 0")
+
+    # 🔹 Récupérer un compte bancaire "source" pour tester
+    from_account = db.query(models.BankAccount).first()
+    if not from_account:
+        raise HTTPException(status_code=404, detail="Aucun compte trouvé")
+
+    # Condition : ne pas transférer vers le même compte
+    if from_account.id == to_account_id:
+        raise HTTPException(status_code=400, detail="Impossible de transférer vers le même compte")
+
+    # 🔹 Récupérer le compte destination
+    to_account = db.query(models.BankAccount).filter(models.BankAccount.id == to_account_id).first()
+    to_account_user = db.query(models.UserAccount).filter(models.UserAccount.id == to_account_id).first()
+
+    if not to_account:
+        raise HTTPException(status_code=404, detail="Compte destination introuvable")
+
+    if from_account.clotured or to_account.clotured:
+        raise HTTPException(status_code=400, detail="Un des comptes est clôturé")
+
+    if from_account.balance < amount:
+        raise HTTPException(status_code=400, detail="Solde insuffisant")
+
+    # Effectuer la transaction
+    from_account.balance -= amount
+    to_account.balance += amount
+
+    # 🔹 Enregistrer la transaction
+    transaction = models.Transaction(
+        sender_last_name=to_account_user.last_name,
+        sender_first_name=to_account_user.first_name,
+        from_account_id=from_account.id,
+        to_account_id=to_account.id,
+        message=message,
+        balance=amount,
+        transaction_date=datetime.utcnow()
+    )
+
+    db.add(transaction)
+    db.commit()
+    db.refresh(from_account)
+    db.refresh(to_account)
+
+    return {
+        "message": f"{amount}€ transférés de {from_account.iban} vers {to_account.iban}",
+        "from_account_balance": from_account.balance,
+        "to_account_balance": to_account.balance
+    }"""
 
 # Fonction qui enregistre la transaction
 @router.get("/history/")
