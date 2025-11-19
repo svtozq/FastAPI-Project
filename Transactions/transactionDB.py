@@ -6,13 +6,13 @@ from sqlalchemy.orm import Session
 from DB import models
 from DB.database import get_db
 from Users.signIn import get_user
-
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 
 # Fonction qui permet de transferer de l'argent du compte connecter a un compte existant
-@router.post("/")
+'''@router.post("/")
 def transfer_money(message: str,to_account_id: int, amount: float, user=Depends(get_user),db: Session = Depends(get_db)):
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Le montant doit être supérieur à 0")
@@ -66,12 +66,20 @@ def transfer_money(message: str,to_account_id: int, amount: float, user=Depends(
         "message": f"{amount}€ transférés de {from_account.iban} vers {to_account.iban}",
         "from_account_balance": from_account.balance,
         "to_account_balance": to_account.balance
-    }
+    }'''
 
+class TransferRequest(BaseModel):
+    message: str
+    to_account_id: str
+    amount: float
 
-"""#methode de transfert qui n'a pas besoin de connectionn pour tester
+#methode de transfert qui n'a pas besoin de connectionn pour tester
 @router.post("/")
-def transfer_money(message: str, to_account_id: int, amount: float, db: Session = Depends(get_db)):
+def transfer_money(request: TransferRequest, db: Session = Depends(get_db)):
+    message = request.message
+    to_account_id = request.to_account_id
+    amount = request.amount
+
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Le montant doit être supérieur à 0")
 
@@ -85,8 +93,8 @@ def transfer_money(message: str, to_account_id: int, amount: float, db: Session 
         raise HTTPException(status_code=400, detail="Impossible de transférer vers le même compte")
 
     # 🔹 Récupérer le compte destination
-    to_account = db.query(models.BankAccount).filter(models.BankAccount.id == to_account_id).first()
-    to_account_user = db.query(models.UserAccount).filter(models.UserAccount.id == to_account_id).first()
+    to_account = db.query(models.BankAccount).filter(models.BankAccount.iban == to_account_id).first()
+    to_account_user = db.query(models.UserAccount).filter(models.UserAccount.id == to_account.user_id).first()
 
     if not to_account:
         raise HTTPException(status_code=404, detail="Compte destination introuvable")
@@ -121,7 +129,7 @@ def transfer_money(message: str, to_account_id: int, amount: float, db: Session 
         "message": f"{amount}€ transférés de {from_account.iban} vers {to_account.iban}",
         "from_account_balance": from_account.balance,
         "to_account_balance": to_account.balance
-    }"""
+    }
 
 # Fonction qui enregistre la transaction
 @router.get("/history/")
