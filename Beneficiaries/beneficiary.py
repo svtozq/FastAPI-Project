@@ -72,9 +72,11 @@ def add_beneficiary(beneficiary_iban: str,last_name: str,first_name: str,db: Ses
 
 @router.get("/")
 def get_beneficiary(db: Session = Depends(get_db), user=Depends(get_user)):
-    beneficiary = db.query(models.Beneficiary).filter(models.Beneficiary.user_id == user["user_id"]).first()
+    beneficiaries = (
+        db.query(models.Beneficiary)
+        .filter(models.Beneficiary.user_id == user["user_id"])
+        .all()
+    )
 
-    if beneficiary:
-        return {"beneficiaries": beneficiary}
-    else:
-        return {"no users found"}
+    return {"beneficiaries": beneficiaries}
+

@@ -44,13 +44,28 @@ def get_accounts(db: Session = Depends(get_db)):
     return accounts
 
 
-# ✅ GET - Voir un compte par ID
-@router.get("/accounts/{account_id}")
-def get_account(user=Depends(get_user), db: Session = Depends(get_db)):
-    account = db.query(models.BankAccount).filter(models.BankAccount.user_id == user["user_id"], models.BankAccount.clotured == False).all()
-    if not account:
-        raise HTTPException(status_code=404, detail="Comptes introuvables")
-    return account
+@router.get("/accounts/me")
+def get_user_accounts(user=Depends(get_user), db: Session = Depends(get_db)):
+    # Récupère les infos complètes depuis la DB
+    db_user = db.query(models.UserAccount).filter(models.UserAccount.id == user["user_id"]).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+
+    # Récupère ses comptes actifs
+    accounts = db.query(models.BankAccount).filter(
+        models.BankAccount.user_id == db_user.id,
+        models.BankAccount.clotured == False
+    ).all()
+
+    return {
+        "user": {
+            "id": db_user.id,
+            "email": db_user.email,
+            "first_name": db_user.first_name,
+            "last_name": db_user.last_name
+        },
+        "accounts": accounts
+    }
 
 
 # ✅ PUT - Clôturer un compte
@@ -66,3 +81,5 @@ def close_account(account_id: int, db: Session = Depends(get_db)):
     account.clotured = True
     db.commit()
     return {"message": f"Le compte {account_id} a été clôturé avec succès"}
+
+

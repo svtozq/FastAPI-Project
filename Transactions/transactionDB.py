@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from pydantic import BaseModel
 from sqlalchemy import or_, and_
 from sqlalchemy import or_, desc
 from fastapi import APIRouter, HTTPException, Depends
@@ -12,8 +14,18 @@ router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 
 # Fonction qui permet de transferer de l'argent du compte connecter a un compte existant
+
+class TransferRequest(BaseModel):
+    message: str
+    to_account_id: str
+    amount: float
+
 @router.post("/")
-def transfer_money(message: str,to_account_id: int, amount: float, user=Depends(get_user),db: Session = Depends(get_db)):
+def transfer_money(request: TransferRequest, user=Depends(get_user),db: Session = Depends(get_db)):
+    message = request.message
+    to_account_id = request.to_account_id
+    amount = request.amount
+
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Le montant doit être supérieur à 0")
 
@@ -24,12 +36,12 @@ def transfer_money(message: str,to_account_id: int, amount: float, user=Depends(
     if not from_account:
         raise HTTPException(status_code=404, detail="Compte de l'utilisateur non trouvé")
 
-    if user["user_id"] == to_account_id:
+    if from_account.iban == to_account_id:
         raise HTTPException(status_code=400, detail="Impossible de transférer vers le même compte")
 
     # Récupérer les comptes
-    to_account = db.query(models.BankAccount).filter(models.BankAccount.id == to_account_id).first()
-    to_account_user = db.query(models.UserAccount).filter(models.UserAccount.id == to_account_id).first()
+    to_account = db.query(models.BankAccount).filter(models.BankAccount.iban == to_account_id).first()
+    to_account_user = db.query(models.UserAccount).filter(models.UserAccount.id == to_account.user_id).first()
 
     if not user["user_id"] or not to_account:
         raise HTTPException(status_code=404, detail="Compte introuvable")
@@ -68,60 +80,6 @@ def transfer_money(message: str,to_account_id: int, amount: float, user=Depends(
         "to_account_balance": to_account.balance
     }
 
-
-"""#methode de transfert qui n'a pas besoin de connectionn pour tester
-@router.post("/")
-def transfer_money(message: str, to_account_id: int, amount: float, db: Session = Depends(get_db)):
-    if amount <= 0:
-        raise HTTPException(status_code=400, detail="Le montant doit être supérieur à 0")
-
-    # 🔹 Récupérer un compte bancaire "source" pour tester
-    from_account = db.query(models.BankAccount).first()
-    if not from_account:
-        raise HTTPException(status_code=404, detail="Aucun compte trouvé")
-
-    # Condition : ne pas transférer vers le même compte
-    if from_account.id == to_account_id:
-        raise HTTPException(status_code=400, detail="Impossible de transférer vers le même compte")
-
-    # 🔹 Récupérer le compte destination
-    to_account = db.query(models.BankAccount).filter(models.BankAccount.id == to_account_id).first()
-    to_account_user = db.query(models.UserAccount).filter(models.UserAccount.id == to_account_id).first()
-
-    if not to_account:
-        raise HTTPException(status_code=404, detail="Compte destination introuvable")
-
-    if from_account.clotured or to_account.clotured:
-        raise HTTPException(status_code=400, detail="Un des comptes est clôturé")
-
-    if from_account.balance < amount:
-        raise HTTPException(status_code=400, detail="Solde insuffisant")
-
-    # Effectuer la transaction
-    from_account.balance -= amount
-    to_account.balance += amount
-
-    # 🔹 Enregistrer la transaction
-    transaction = models.Transaction(
-        sender_last_name=to_account_user.last_name,
-        sender_first_name=to_account_user.first_name,
-        from_account_id=from_account.id,
-        to_account_id=to_account.id,
-        message=message,
-        balance=amount,
-        transaction_date=datetime.utcnow()
-    )
-
-    db.add(transaction)
-    db.commit()
-    db.refresh(from_account)
-    db.refresh(to_account)
-
-    return {
-        "message": f"{amount}€ transférés de {from_account.iban} vers {to_account.iban}",
-        "from_account_balance": from_account.balance,
-        "to_account_balance": to_account.balance
-    }"""
 
 # Fonction qui enregistre la transaction
 @router.get("/history/")
@@ -167,21 +125,27 @@ def get_history_transaction(user=Depends(get_user), db: Session = Depends(get_db
 @router.get("/history_id/")
 def get_transaction_Byid(id: int,user=Depends(get_user), db: Session = Depends(get_db)):
 
+    # Récupére le compte bancaire de l’utilisateur connecté
+    account = db.query(models.BankAccount).filter(models.BankAccount.user_id == user["user_id"]).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Compte utilisateur introuvable")
+
     if not id:
         raise HTTPException(status_code=404, detail="Transaction introuvable")
 
-    # Requete qui recupere l'utilisateur connecté et l'utilisateur en lien avec la transaction
+    # Requete qui recupere le compte bancaire de l'utilisateur connecté et le compte bancaire de l'utilisateur en lien avec la transaction
     t = db.query(models.Transaction).filter(
         and_(
             models.Transaction.id == id,
-        or_(
-            models.Transaction.from_account_id == user["user_id"],
-            models.Transaction.to_account_id == user["user_id"]
-        ))
+            or_(
+                models.Transaction.from_account_id == account.id,
+                models.Transaction.to_account_id == account.id
+            )
+        )
     ).first()
 
-    if not t:
-        raise HTTPException(status_code=404, detail="Aucune transaction trouvée pour cet utilisateur")
+    '''if not t:
+        raise HTTPException(status_code=404, detail="Aucune transaction trouvée pour cet utilisateur")'''
 
     return [
         {
