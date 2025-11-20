@@ -75,19 +75,19 @@ def transfer_money(request: TransferRequest, user=Depends(get_user),db: Session 
     db.refresh(to_account)
 
     return {
-        "message": f"{amount}€ transférés de {from_account.iban} vers {to_account.iban}",
+        "message": f"{amount}€ transférés de {from_account.type} vers {to_account.type}",
         "from_account_balance": from_account.balance,
         "to_account_balance": to_account.balance
     }
 
 
-class transfer_money_id(BaseModel):
+class TransferMoneyRequest(BaseModel):
     amount: float
     message: str
     iban_account: str
 
 @router.post("/transfer_money_id")
-def transfer_money_id(request: transfer_money_id,user=Depends(get_user),db: Session = Depends(get_db)):
+def transfer_money_id(request: TransferMoneyRequest,user=Depends(get_user),db: Session = Depends(get_db)):
     to_account_id = request.iban_account
     amount = request.amount
     message = request.message
@@ -141,7 +141,7 @@ def transfer_money_id(request: transfer_money_id,user=Depends(get_user),db: Sess
     db.refresh(to_account)
 
     return {
-        "message": f"{amount}€ transférés de {from_account.iban} vers {to_account.iban}",
+        "message": f"{amount} € transférés de {from_account.type} vers {to_account.type}",
         "from_account_balance": from_account.balance,
         "to_account_balance": to_account.balance
     }

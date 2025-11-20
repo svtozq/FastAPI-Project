@@ -83,6 +83,7 @@ def add_beneficiary(request:BeneficiaryCreate ,db: Session = Depends(get_db),use
 
 
 @router.get("/")
+@router.get("/")
 def get_beneficiary(db: Session = Depends(get_db), user=Depends(get_user)):
     beneficiaries = (
         db.query(models.Beneficiary)
@@ -90,5 +91,21 @@ def get_beneficiary(db: Session = Depends(get_db), user=Depends(get_user)):
         .all()
     )
 
-    return {"beneficiaries": beneficiaries}
+    result = []
+
+    for b in beneficiaries:
+        result.append({
+            "id": b.id,
+            "first_name": b.first_name,
+            "last_name": b.last_name,
+            "Beneficiary_date": b.Beneficiary_date,
+
+            # 🔥 On renvoie bien l’IBAN ici
+            "bank_account": {
+                "iban": b.bank_account.iban
+            }
+        })
+
+    return {"beneficiaries": result}
+
 
