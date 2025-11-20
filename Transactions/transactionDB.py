@@ -17,12 +17,14 @@ router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 class TransferRequest(BaseModel):
     message: str
+    from_account_id: int
     to_account_id: str
     amount: float
 
 @router.post("/")
 def transfer_money(request: TransferRequest, user=Depends(get_user),db: Session = Depends(get_db)):
     message = request.message
+    from_account_id = request.from_account_id
     to_account_id = request.to_account_id
     amount = request.amount
 
@@ -30,7 +32,10 @@ def transfer_money(request: TransferRequest, user=Depends(get_user),db: Session 
         raise HTTPException(status_code=400, detail="Le montant doit être supérieur à 0")
 
     # 🔹 Récupérer le compte bancaire de l'utilisateur connecté (compte source)
-    from_account = db.query(models.BankAccount).filter(models.BankAccount.user_id == user["user_id"]).first()
+    from_account = db.query(models.BankAccount).filter(
+        models.BankAccount.id == from_account_id,
+        models.BankAccount.user_id == user["user_id"]
+    ).first()
 
     #Condition
     if not from_account:
@@ -84,10 +89,12 @@ def transfer_money(request: TransferRequest, user=Depends(get_user),db: Session 
 class TransferMoneyRequest(BaseModel):
     amount: float
     message: str
+    from_account_id: int
     iban_account: str
 
 @router.post("/transfer_money_id")
 def transfer_money_id(request: TransferMoneyRequest,user=Depends(get_user),db: Session = Depends(get_db)):
+    from_account_id = request.from_account_id
     to_account_id = request.iban_account
     amount = request.amount
     message = request.message
@@ -96,7 +103,10 @@ def transfer_money_id(request: TransferMoneyRequest,user=Depends(get_user),db: S
         raise HTTPException(status_code=400, detail="Le montant doit être supérieur à 0")
 
     # 🔹 Récupérer le compte bancaire de l'utilisateur connecté (compte source)
-    from_account = db.query(models.BankAccount).filter(models.BankAccount.user_id == user["user_id"]).first()
+    from_account = db.query(models.BankAccount).filter(
+        models.BankAccount.id == from_account_id,
+        models.BankAccount.user_id == user["user_id"]
+    ).first()
 
     #Condition
     if not from_account:
@@ -151,18 +161,21 @@ def transfer_money_id(request: TransferMoneyRequest,user=Depends(get_user),db: S
 @router.get("/history/")
 def get_history_transaction(user=Depends(get_user), db: Session = Depends(get_db)):
 
-    # 🔹 Récupérer le compte bancaire de l'utilisateur connecté (compte source)
-    account = db.query(models.BankAccount).filter(models.BankAccount.user_id == user["user_id"]).first()
+    # 🔹 Récupérer tous les comptes de l'utilisateur
+    user_accounts = db.query(models.BankAccount.id).filter(
+        models.BankAccount.user_id == user["user_id"]
+    ).all()
+    account_ids = [acc.id for acc in user_accounts]
 
     # Condition
-    if not account:
+    if not account_ids:
         raise HTTPException(status_code=404, detail="Compte utilisateur introuvable")
 
-    # Requete qui recupere l'utilisateur qui est en lien avec la transaction
+        # 🔹 Récupérer toutes les transactions impliquant un de ses comptes
     transactions = db.query(models.Transaction).filter(
         or_(
-            models.Transaction.from_account_id == account.id,
-            models.Transaction.to_account_id == account.id
+            models.Transaction.from_account_id.in_(account_ids),
+            models.Transaction.to_account_id.in_(account_ids)
         )
     ).order_by(desc(models.Transaction.transaction_date)).all()
 
@@ -176,6 +189,8 @@ def get_history_transaction(user=Depends(get_user), db: Session = Depends(get_db
             "sender_last_name": t.sender_last_name,
             "from_account_id": t.from_account_id,
             "to_account_id": t.to_account_id,
+            "from_account": {"type": t.from_account.type},
+            "to_account": {"type": t.to_account.type},
             "amount": t.balance,
             "message":t.message,
             "transaction_date": t.transaction_date.strftime("%Y-%m-%d %H:%M:%S") if t.transaction_date else None
@@ -191,21 +206,25 @@ def get_history_transaction(user=Depends(get_user), db: Session = Depends(get_db
 @router.get("/history_id/")
 def get_transaction_Byid(id: int,user=Depends(get_user), db: Session = Depends(get_db)):
 
-    # Récupére le compte bancaire de l’utilisateur connecté
-    account = db.query(models.BankAccount).filter(models.BankAccount.user_id == user["user_id"]).first()
-    if not account:
+    # 🔹 Récupérer tous les comptes de l'utilisateur
+    user_accounts = db.query(models.BankAccount.id).filter(
+        models.BankAccount.user_id == user["user_id"]
+    ).all()
+    account_ids = [acc.id for acc in user_accounts]
+
+    if not account_ids:
         raise HTTPException(status_code=404, detail="Compte utilisateur introuvable")
 
     if not id:
         raise HTTPException(status_code=404, detail="Transaction introuvable")
 
-    # Requete qui recupere le compte bancaire de l'utilisateur connecté et le compte bancaire de l'utilisateur en lien avec la transaction
+    # 🔹 Récupérer la transaction en vérifiant que l'utilisateur est impliqué
     t = db.query(models.Transaction).filter(
         and_(
             models.Transaction.id == id,
             or_(
-                models.Transaction.from_account_id == account.id,
-                models.Transaction.to_account_id == account.id
+                models.Transaction.from_account_id.in_(account_ids),
+                models.Transaction.to_account_id.in_(account_ids)
             )
         )
     ).first()
@@ -222,6 +241,8 @@ def get_transaction_Byid(id: int,user=Depends(get_user), db: Session = Depends(g
             "to_account_id": t.to_account_id,
             "amount": t.balance,
             "message":t.message,
+            "from_account": {"type": t.from_account.type},
+            "to_account": {"type": t.to_account.type},
             "transaction_date": t.transaction_date.strftime("%Y-%m-%d %H:%M:%S") if t.transaction_date else None
         }
     ]
