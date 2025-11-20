@@ -28,6 +28,8 @@ class BankAccount(Base):
     iban = Column(String(34), unique=True, nullable=False)
     balance = Column(Float, default=0)
     clotured = Column(Boolean, default=False)
+    type= Column(String, default=False)
+    BankAccount_date = Column(DateTime)
 
     # Relations
     user = relationship("UserAccount", back_populates="bank_accounts")
