@@ -66,6 +66,26 @@ def get_accounts(db: Session = Depends(get_db)):
     accounts = db.query(models.BankAccount).all()
     return accounts
 
+# ✅ GET - Détail d’un compte
+@router.get("/accounts/{account_id}")
+def get_account_details(account_id: int, user=Depends(get_user), db: Session = Depends(get_db)):
+    account = db.query(models.BankAccount).filter(
+        models.BankAccount.id == account_id,
+        models.BankAccount.user_id == user["user_id"]
+    ).first()
+
+    if not account:
+        raise HTTPException(status_code=404, detail="Compte introuvable")
+
+    return {
+        "id": account.id,
+        "iban": account.iban,
+        "balance": account.balance,
+        "type": account.type,
+        "opened_at": account.BankAccount_date,
+        "clotured": account.clotured,
+    }
+
 
 @router.get("/accounts/me")
 def get_user_accounts(user=Depends(get_user), db: Session = Depends(get_db)):
@@ -117,5 +137,13 @@ def close_account(account_id: int, user=Depends(get_user), db: Session = Depends
     account.clotured = True
     db.commit()
     return {"message": f"Le compte {account_id} a été clôturé avec succès"}
+
+
+
+
+
+
+
+
 
 
