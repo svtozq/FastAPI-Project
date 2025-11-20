@@ -81,6 +81,72 @@ def transfer_money(request: TransferRequest, user=Depends(get_user),db: Session 
     }
 
 
+class transfer_money_id(BaseModel):
+    amount: float
+    message: str
+    iban_account: str
+
+@router.post("/transfer_money_id")
+def transfer_money_id(request: transfer_money_id,user=Depends(get_user),db: Session = Depends(get_db)):
+    to_account_id = request.iban_account
+    amount = request.amount
+    message = request.message
+
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Le montant doit être supérieur à 0")
+
+    # 🔹 Récupérer le compte bancaire de l'utilisateur connecté (compte source)
+    from_account = db.query(models.BankAccount).filter(models.BankAccount.user_id == user["user_id"]).first()
+
+    #Condition
+    if not from_account:
+        raise HTTPException(status_code=404, detail="Compte de l'utilisateur non trouvé")
+
+    if from_account.iban == to_account_id:
+        raise HTTPException(status_code=400, detail="Impossible de transférer vers le même compte")
+
+    # Récupérer les comptes
+    to_account = db.query(models.BankAccount).filter(models.BankAccount.iban == to_account_id).first()
+    to_account_user = db.query(models.UserAccount).filter(models.UserAccount.id == to_account.user_id).first()
+
+    if not user["user_id"] or not to_account:
+        raise HTTPException(status_code=404, detail="Compte introuvable")
+
+    if from_account.clotured or to_account.clotured:
+        raise HTTPException(status_code=400, detail="Un des comptes est clôturé")
+
+    if from_account.balance < amount:
+        raise HTTPException(status_code=400, detail="Solde insuffisant")
+
+    # Effectuer la transaction
+    from_account.balance -= amount
+    to_account.balance += amount
+
+    # 🔹 Enregistrer la transaction
+    transaction = models.Transaction(
+        sender_last_name=to_account_user.last_name,
+        sender_first_name=to_account_user.first_name,
+        from_account_id=from_account.id,
+        to_account_id=to_account.id,
+        message=message,
+        balance=amount,
+        transaction_date=datetime.utcnow()
+    )
+
+    # Met a jour la base de donnée
+    db.add(transaction)
+
+    db.commit()
+    db.refresh(from_account)
+    db.refresh(to_account)
+
+    return {
+        "message": f"{amount}€ transférés de {from_account.iban} vers {to_account.iban}",
+        "from_account_balance": from_account.balance,
+        "to_account_balance": to_account.balance
+    }
+
+
 # Fonction qui enregistre la transaction
 @router.get("/history/")
 def get_history_transaction(user=Depends(get_user), db: Session = Depends(get_db)):

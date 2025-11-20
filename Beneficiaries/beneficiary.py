@@ -15,11 +15,23 @@ from DB.models import Beneficiary, BankAccount
 router = APIRouter(prefix="/beneficiary", tags=["Beneficiary"])
 
 
+class BeneficiaryCreate(BaseModel):
+    beneficiary_iban: str
+    last_name: str
+    first_name: str
 
 
 
 @router.post("/")
-def add_beneficiary(beneficiary_iban: str,last_name: str,first_name: str,db: Session = Depends(get_db),user=Depends(get_user)):
+def add_beneficiary(request:BeneficiaryCreate ,db: Session = Depends(get_db),user=Depends(get_user)):
+    beneficiary_iban = request.beneficiary_iban
+    first_name = request.first_name
+    last_name = request.last_name
+
+    #   On verifie que les nom et prenom ne sont pas vide
+    if not first_name.strip() or not last_name.strip():
+        raise HTTPException(status_code=400, detail="Le prénom et le nom sont obligatoires")
+
     # 🔹 Récupérer le compte de l'utilisateur connecté
     from_account = db.query(models.BankAccount).filter(models.BankAccount.user_id == user["user_id"]).first()
 
@@ -47,7 +59,7 @@ def add_beneficiary(beneficiary_iban: str,last_name: str,first_name: str,db: Ses
 
     # 🔹 Créer le bénéficiaire
     beneficiary = models.Beneficiary(
-        bank_account_id=bank_account.iban,
+        bank_account_id=bank_account.id,
         user_id=user["user_id"],
         last_name=last_name,
         first_name=first_name,
