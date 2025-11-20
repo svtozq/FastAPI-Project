@@ -34,6 +34,7 @@ class BankAccount(BaseModel):
     iban: str
     balance: float
     clotured: bool
+    type: str
 
     class Config:
         orm_mode = True
@@ -112,6 +113,8 @@ def create_user(request: UserAccount, db: Session = Depends(get_db)):
         iban=iban,
         balance=0,
         clotured=False,
+        type="Compte Principal",
+        BankAccount_date=now,
     )
     db.add(bank)
     db.commit()
