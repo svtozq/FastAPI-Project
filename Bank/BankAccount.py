@@ -90,6 +90,13 @@ def get_user_accounts(user=Depends(get_user), db: Session = Depends(get_db)):
         "accounts": accounts
     }
 
+# ✅ GET - Détail d’un compte
+@router.get("/account/detail/{account_id}")
+def get_account_details(account_id: int, user=Depends(get_user), db: Session = Depends(get_db)):
+    account = db.query(models.BankAccount).filter( models.BankAccount.id == account_id, models.BankAccount.user_id == user["user_id"] ).first()
+    if not account: raise HTTPException(status_code=404, detail="Compte introuvable")
+    return { "id": account.id, "iban": account.iban, "balance": account.balance, "type": account.type, "opened_at": account.BankAccount_date, "clotured": account.clotured, }
+
 
 # ✅ PUT - Clôturer un compte
 @router.put("/accounts/{account_id}/close")
@@ -112,7 +119,7 @@ def close_account(account_id: int, user=Depends(get_user), db: Session = Depends
         raise HTTPException(status_code=400, detail="Compte déjà clôturé")
 
     if account.type == main_account.type:
-        raise HTTPException(status_code=400, detail="Impossible de clôturer le compte principal")
+        raise HTTPException(status_code=400, detail="Vous ne pouvez pas cloturer votre compte principal")
 
     account.clotured = True
     db.commit()
