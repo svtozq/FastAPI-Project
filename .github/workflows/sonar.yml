@@ -32,7 +32,7 @@ jobs:
           args: >
             -Dsonar.projectKey=svtozq
             -Dsonar.organization=strauss
-            -Dsonar.sources=Revobrut
+            -Dsonar.sources=.
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
