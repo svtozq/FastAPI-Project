@@ -27,6 +27,13 @@ jobs:
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          projectBaseDir: .
+          args: >
+            -Dsonar.projectKey=svtozq
+            -Dsonar.organization=strauss
+            -Dsonar.sources=Revobrut
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
 
