@@ -1,0 +1,17 @@
+name: CI - Build Backend FastAPI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Build Docker Backend
+        run: docker build -t bank-back .
