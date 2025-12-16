@@ -3,7 +3,7 @@ name: CI - Build & Test Backend FastAPI
 on:
   push:
     branches:
-      - Build
+      - main
 
 jobs:
   build-and-test:
