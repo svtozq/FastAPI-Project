@@ -30,8 +30,8 @@ jobs:
         with:
           projectBaseDir: .
           args: >
-            -Dsonar.projectKey=svtozq
-            -Dsonar.organization=strauss
+            -Dsonar.projectKey=svtozq_FastAPI-Project
+            -Dsonar.organization=Strauss
             -Dsonar.sources=.
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
