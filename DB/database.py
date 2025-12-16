@@ -13,7 +13,7 @@ engine = create_engine(
 # Create session
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base for models tables
+# Base for models tabless
 Base = declarative_base()
 
 def get_db():
