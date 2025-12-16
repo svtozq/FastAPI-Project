@@ -1,17 +1,21 @@
-name: CI - Build Backend FastAPI
+name: CI - Build & Test Backend FastAPI
 
 on:
   push:
     branches:
-      - main
+      - Build
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Build Docker Backend
         run: docker build -t bank-back .
+
+      - name: Run tests with pytest (report)
+        run: |
+          docker run --rm bank-back \
+          pytest --junitxml=report.xml
