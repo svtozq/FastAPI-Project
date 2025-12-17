@@ -1,3 +1,12 @@
+"""
+Gestion des comptes bancaires.
+
+Ce module contient les endpoints permettant de créer, consulter
+et clôturer des comptes bancaires pour les utilisateurs authentifiés.
+"""
+
+
+
 import datetime
 import random
 from fastapi import FastAPI, Depends, HTTPException, APIRouter
@@ -9,8 +18,16 @@ from pydantic import BaseModel
 
 
 router = APIRouter(prefix="/Bank", tags=["BankAccount"])
+"""
+Router FastAPI dédié à la gestion des comptes bancaires.
+"""
+
 
 class BankAccount(BaseModel):
+    """
+        Modèle représentant les données nécessaires
+        à la création d'un compte bancaire.
+    """
     type: str
 
 
@@ -18,6 +35,18 @@ class BankAccount(BaseModel):
 # ✅ POST - Créer un compte bancaire
 @router.post("/accounts/")
 def create_account(data : BankAccount, user=Depends(get_user), db: Session = Depends(get_db)):
+    """
+        Crée un nouveau compte bancaire pour l'utilisateur connecté.
+
+        - Génère automatiquement un IBAN fictif
+        - Vérifie la limite maximale de comptes
+        - Définit un compte principal si aucun n'existe
+
+        :return: Compte bancaire créé
+    """
+
+
+
     # Génère un IBAN fictif
     iban = "FR" + str(random.randint(10, 99)) + str(random.randrange(10 ** 11, 10 ** 12))
 
@@ -69,6 +98,10 @@ def get_accounts(db: Session = Depends(get_db)):
 
 @router.get("/accounts/me")
 def get_user_accounts(user=Depends(get_user), db: Session = Depends(get_db)):
+    """
+        Récupère les informations de l'utilisateur connecté
+        ainsi que la liste de ses comptes bancaires actifs.
+    """
     # Récupère les infos complètes depuis la DB
     db_user = db.query(models.UserAccount).filter(models.UserAccount.id == user["user_id"]).first()
     if not db_user:

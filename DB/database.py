@@ -1,3 +1,14 @@
+"""
+Configuration de la base de données SQLite.
+
+Ce module initialise la connexion SQLAlchemy,
+définit la session et fournit une dépendance FastAPI
+pour accéder à la base de données.
+"""
+
+
+
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -17,6 +28,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db():
+    """
+        Fournit une session de base de données SQLAlchemy.
+
+        Utilisée comme dépendance FastAPI.
+    """
     db = SessionLocal()
     try:
         yield db

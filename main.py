@@ -1,3 +1,12 @@
+"""
+Point d'entrée du backend FastAPI.
+
+Ce module initialise l'application FastAPI, configure les middlewares
+(CORS), crée les tables de la base de données et enregistre l'ensemble
+des routes métier via les routers.
+"""
+
+
 import datetime
 import random
 import re
@@ -22,6 +31,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 #Création automatique des tables dans la base SQLite
 models.Base.metadata.create_all(bind=engine)
+"""
+Initialisation de l'application FastAPI.
+"""
+
 app = FastAPI()
 
 #middleware CORS pour autorisé l'échange entre le back et le front

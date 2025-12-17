@@ -1,0 +1,190 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="fr" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modules du backend &mdash; Documentation FastAPI-Prject 3.13.2</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=71a3a236"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/translations.js?v=e6b791cb"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Recherche" href="search.html" />
+    <link rel="prev" title="Documentation du backend" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            FastAPI-Prject
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contenu :</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Modules du backend</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#point-d-entree">Point d’entrée</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-DB.database">Base de données</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#DB.database.get_db"><code class="docutils literal notranslate"><span class="pre">get_db()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-Bank.BankAccount">Gestion des comptes bancaires</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Bank.BankAccount.BankAccount"><code class="docutils literal notranslate"><span class="pre">BankAccount</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Bank.BankAccount.BankAccount.model_config"><code class="docutils literal notranslate"><span class="pre">BankAccount.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Bank.BankAccount.create_account"><code class="docutils literal notranslate"><span class="pre">create_account()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Bank.BankAccount.get_user_accounts"><code class="docutils literal notranslate"><span class="pre">get_user_accounts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Bank.BankAccount.router"><code class="docutils literal notranslate"><span class="pre">router</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">FastAPI-Prject</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Modules du backend</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/modules.rst.txt" rel="nofollow"> Afficher la source de la page</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="modules-du-backend">
+<h1>Modules du backend<a class="headerlink" href="#modules-du-backend" title="Lien vers cette rubrique"></a></h1>
+<section id="point-d-entree">
+<h2>Point d’entrée<a class="headerlink" href="#point-d-entree" title="Lien vers cette rubrique"></a></h2>
+</section>
+<section id="module-DB.database">
+<span id="base-de-donnees"></span><h2>Base de données<a class="headerlink" href="#module-DB.database" title="Lien vers cette rubrique"></a></h2>
+<p>Configuration de la base de données SQLite.</p>
+<p>Ce module initialise la connexion SQLAlchemy,
+définit la session et fournit une dépendance FastAPI
+pour accéder à la base de données.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="DB.database.get_db">
+<span class="sig-prename descclassname"><span class="pre">DB.database.</span></span><span class="sig-name descname"><span class="pre">get_db</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#DB.database.get_db" title="Lien vers cette définition"></a></dt>
+<dd><p>Fournit une session de base de données SQLAlchemy.</p>
+<p>Utilisée comme dépendance FastAPI.</p>
+</dd></dl>
+
+</section>
+<section id="module-Bank.BankAccount">
+<span id="gestion-des-comptes-bancaires"></span><h2>Gestion des comptes bancaires<a class="headerlink" href="#module-Bank.BankAccount" title="Lien vers cette rubrique"></a></h2>
+<p>Gestion des comptes bancaires.</p>
+<p>Ce module contient les endpoints permettant de créer, consulter
+et clôturer des comptes bancaires pour les utilisateurs authentifiés.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="Bank.BankAccount.BankAccount">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Bank.BankAccount.</span></span><span class="sig-name descname"><span class="pre">BankAccount</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Bank.BankAccount.BankAccount" title="Lien vers cette définition"></a></dt>
+<dd><p>Modèle représentant les données nécessaires
+à la création d’un compte bancaire.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Bank.BankAccount.BankAccount.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#Bank.BankAccount.BankAccount.model_config" title="Lien vers cette définition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Bank.BankAccount.create_account">
+<span class="sig-prename descclassname"><span class="pre">Bank.BankAccount.</span></span><span class="sig-name descname"><span class="pre">create_account</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#Bank.BankAccount.BankAccount" title="Bank.BankAccount.BankAccount"><span class="pre">BankAccount</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Depends(get_user)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Session</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(get_db)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Bank.BankAccount.create_account" title="Lien vers cette définition"></a></dt>
+<dd><p>Crée un nouveau compte bancaire pour l’utilisateur connecté.</p>
+<ul class="simple">
+<li><p>Génère automatiquement un IBAN fictif</p></li>
+<li><p>Vérifie la limite maximale de comptes</p></li>
+<li><p>Définit un compte principal si aucun n’existe</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Compte bancaire créé</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Bank.BankAccount.get_user_accounts">
+<span class="sig-prename descclassname"><span class="pre">Bank.BankAccount.</span></span><span class="sig-name descname"><span class="pre">get_user_accounts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Depends(get_user)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Session</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(get_db)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Bank.BankAccount.get_user_accounts" title="Lien vers cette définition"></a></dt>
+<dd><p>Récupère les informations de l’utilisateur connecté
+ainsi que la liste de ses comptes bancaires actifs.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="Bank.BankAccount.router">
+<span class="sig-prename descclassname"><span class="pre">Bank.BankAccount.</span></span><span class="sig-name descname"><span class="pre">router</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;fastapi.routing.APIRouter</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#Bank.BankAccount.router" title="Lien vers cette définition"></a></dt>
+<dd><p>Router FastAPI dédié à la gestion des comptes bancaires.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Pied de page">
+        <a href="index.html" class="btn btn-neutral float-left" title="Documentation du backend" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Précédent</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Droits d'auteur 2025, Lenny6path.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
