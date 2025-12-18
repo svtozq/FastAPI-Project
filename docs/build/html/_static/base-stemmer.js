@@ -1,6 +1,6 @@
 /**@constructor*/
-BaseStemmer = function() {
-    this.setCurrent = function(value) {
+const BaseStemmer = function () {
+    this.setCurrent = function (value) {
         this.current = value;
         this.cursor = 0;
         this.limit = this.current.length;
@@ -8,6 +8,8 @@ BaseStemmer = function() {
         this.bra = this.cursor;
         this.ket = this.limit;
     };
+};
+
 
     this.getCurrent = function() {
         return this.current;
