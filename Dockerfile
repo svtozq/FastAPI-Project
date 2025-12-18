@@ -16,8 +16,5 @@ COPY . .
 # Exposer le port utilisé par FastAPI
 EXPOSE 8000
 
-# Commande pour lancer l’API
-CMD ["fastapi", "dev", "main.py", "--host", "0.0.0.0", "--port", "8000"]
-
 # Vérifie que l'application se charge sans erreur
 CMD ["python", "-c", "import main"]
