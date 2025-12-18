@@ -1,12 +1,12 @@
 /*
  * French Stemmer and Stopwords for searchtools.js
- * Corrected version, fully functional
+ * Modernized version using let/const
  */
 
 // ---------------------------
 // Stopwords français
 // ---------------------------
-var stopwords = [
+const stopwords = [
     "ai", "aie", "aient", "aies", "ait", "as", "au", "aura", "aurai", "auraient",
     "aurais", "aurait", "auras", "aurez", "auriez", "aurions", "aurons", "auront",
     "aux", "avaient", "avais", "avait", "avec", "avez", "aviez", "avions", "avons",
@@ -26,203 +26,207 @@ var stopwords = [
 ];
 
 // ---------------------------
-// BaseStemmer - version corrigée
+// BaseStemmer - version modernisée
 // ---------------------------
-var BaseStemmer = function() {
-    this.setCurrent = function(value) {
+class BaseStemmer {
+    constructor() {
+        this.current = '';
+        this.cursor = 0;
+        this.limit = 0;
+        this.limit_backward = 0;
+        this.bra = 0;
+        this.ket = 0;
+    }
+
+    setCurrent(value) {
         this.current = value;
         this.cursor = 0;
         this.limit = this.current.length;
         this.limit_backward = 0;
         this.bra = this.cursor;
         this.ket = this.limit;
-    };
+    }
 
-    this.getCurrent = function() {
+    getCurrent() {
         return this.current;
-    };
+    }
 
-    this.copy_from = function(other) {
+    copy_from(other) {
         this.current = other.current;
         this.cursor = other.cursor;
         this.limit = other.limit;
         this.limit_backward = other.limit_backward;
         this.bra = other.bra;
         this.ket = other.ket;
-    };
+    }
 
-    this.in_grouping = function(s, min, max) {
+    in_grouping(s, min, max) {
         if (this.cursor >= this.limit) return false;
-        var ch = this.current.charCodeAt(this.cursor);
+        let ch = this.current.charCodeAt(this.cursor);
         if (ch < min || ch > max) return false;
         ch -= min;
-        if ((s[ch >>> 3] & (1 << (ch & 7))) == 0) return false;
+        if ((s[ch >>> 3] & (1 << (ch & 7))) === 0) return false;
         this.cursor++;
         return true;
-    };
+    }
 
-    this.in_grouping_b = function(s, min, max) {
+    in_grouping_b(s, min, max) {
         if (this.cursor <= this.limit_backward) return false;
-        var ch = this.current.charCodeAt(this.cursor - 1);
+        let ch = this.current.charCodeAt(this.cursor - 1);
         if (ch < min || ch > max) return false;
         ch -= min;
-        if ((s[ch >>> 3] & (1 << (ch & 7))) == 0) return false;
+        if ((s[ch >>> 3] & (1 << (ch & 7))) === 0) return false;
         this.cursor--;
         return true;
-    };
+    }
 
-    this.out_grouping = function(s, min, max) {
+    out_grouping(s, min, max) {
         if (this.cursor >= this.limit) return false;
-        var ch = this.current.charCodeAt(this.cursor);
+        let ch = this.current.charCodeAt(this.cursor);
         if (ch < min || ch > max) { this.cursor++; return true; }
         ch -= min;
-        if ((s[ch >>> 3] & (1 << (ch & 7))) == 0) { this.cursor++; return true; }
+        if ((s[ch >>> 3] & (1 << (ch & 7))) === 0) { this.cursor++; return true; }
         return false;
-    };
+    }
 
-    this.out_grouping_b = function(s, min, max) {
+    out_grouping_b(s, min, max) {
         if (this.cursor <= this.limit_backward) return false;
-        var ch = this.current.charCodeAt(this.cursor - 1);
+        let ch = this.current.charCodeAt(this.cursor - 1);
         if (ch < min || ch > max) { this.cursor--; return true; }
         ch -= min;
-        if ((s[ch >>> 3] & (1 << (ch & 7))) == 0) { this.cursor--; return true; }
+        if ((s[ch >>> 3] & (1 << (ch & 7))) === 0) { this.cursor--; return true; }
         return false;
-    };
+    }
 
-    this.eq_s = function(s) {
+    eq_s(s) {
         if (this.limit - this.cursor < s.length) return false;
         if (this.current.slice(this.cursor, this.cursor + s.length) !== s) return false;
         this.cursor += s.length;
         return true;
-    };
+    }
 
-    this.eq_s_b = function(s) {
+    eq_s_b(s) {
         if (this.cursor - this.limit_backward < s.length) return false;
         if (this.current.slice(this.cursor - s.length, this.cursor) !== s) return false;
         this.cursor -= s.length;
         return true;
-    };
+    }
 
-    this.find_among = function(v) {
-        var i = 0, j = v.length;
-        var c = this.cursor, l = this.limit;
-        var common_i = 0, common_j = 0;
-        var first_key_inspected = false;
+    // find_among et find_among_b peuvent rester en var mais je les convertis en let
+    find_among(v) {
+        let i = 0, j = v.length;
+        let c = this.cursor, l = this.limit;
+        let common_i = 0, common_j = 0;
+        let first_key_inspected = false;
 
         while (true) {
-            var k = i + ((j - i) >>> 1);
-            var diff = 0;
-            var common = common_i < common_j ? common_i : common_j;
-            var w = v[k];
-            var i2;
-            for (i2 = common; i2 < w[0].length; i2++) {
-                if (c + common == l) { diff = -1; break; }
+            let k = i + ((j - i) >>> 1);
+            let diff = 0;
+            let common = common_i < common_j ? common_i : common_j;
+            let w = v[k];
+            for (let i2 = common; i2 < w[0].length; i2++) {
+                if (c + common === l) { diff = -1; break; }
                 diff = this.current.charCodeAt(c + common) - w[0].charCodeAt(i2);
-                if (diff != 0) break;
+                if (diff !== 0) break;
                 common++;
             }
             if (diff < 0) { j = k; common_j = common; }
             else { i = k; common_i = common; }
             if (j - i <= 1) {
-                if (i > 0 || j == i) break;
+                if (i > 0 || j === i) break;
                 if (first_key_inspected) break;
                 first_key_inspected = true;
             }
         }
 
         do {
-            var w = v[i];
+            let w = v[i];
             if (common_i >= w[0].length) {
                 this.cursor = c + w[0].length;
                 if (w.length < 4) return w[2];
-                var res = w[3](this);
+                let res = w[3](this);
                 this.cursor = c + w[0].length;
                 if (res) return w[2];
             }
             i = w[1];
         } while (i >= 0);
         return 0;
-    };
+    }
 
-    this.find_among_b = function(v) {
-        var i = 0, j = v.length;
-        var c = this.cursor, lb = this.limit_backward;
-        var common_i = 0, common_j = 0;
-        var first_key_inspected = false;
+    find_among_b(v) {
+        let i = 0, j = v.length;
+        let c = this.cursor, lb = this.limit_backward;
+        let common_i = 0, common_j = 0;
+        let first_key_inspected = false;
 
         while (true) {
-            var k = i + ((j - i) >> 1);
-            var diff = 0;
-            var common = common_i < common_j ? common_i : common_j;
-            var w = v[k];
-            for (var i2 = w[0].length - 1 - common; i2 >= 0; i2--) {
-                if (c - common == lb) { diff = -1; break; }
+            let k = i + ((j - i) >> 1);
+            let diff = 0;
+            let common = common_i < common_j ? common_i : common_j;
+            let w = v[k];
+            for (let i2 = w[0].length - 1 - common; i2 >= 0; i2--) {
+                if (c - common === lb) { diff = -1; break; }
                 diff = this.current.charCodeAt(c - 1 - common) - w[0].charCodeAt(i2);
-                if (diff != 0) break;
+                if (diff !== 0) break;
                 common++;
             }
             if (diff < 0) { j = k; common_j = common; }
             else { i = k; common_i = common; }
             if (j - i <= 1) {
-                if (i > 0 || j == i) break;
+                if (i > 0 || j === i) break;
                 if (first_key_inspected) break;
                 first_key_inspected = true;
             }
         }
 
         do {
-            var w = v[i];
+            let w = v[i];
             if (common_i >= w[0].length) {
                 this.cursor = c - w[0].length;
                 if (w.length < 4) return w[2];
-                var res = w[3](this);
+                let res = w[3](this);
                 this.cursor = c - w[0].length;
                 if (res) return w[2];
             }
             i = w[1];
         } while (i >= 0);
         return 0;
-    };
+    }
 
-    this.replace_s = function(c_bra, c_ket, s) {
-        var adjustment = s.length - (c_ket - c_bra);
+    replace_s(c_bra, c_ket, s) {
+        let adjustment = s.length - (c_ket - c_bra);
         this.current = this.current.slice(0, c_bra) + s + this.current.slice(c_ket);
         this.limit += adjustment;
         if (this.cursor >= c_ket) this.cursor += adjustment;
         else if (this.cursor > c_bra) this.cursor = c_bra;
         return adjustment;
-    };
+    }
 
-    this.slice_check = function() {
+    slice_check() {
         return !(this.bra < 0 || this.bra > this.ket || this.ket > this.limit || this.limit > this.current.length);
-    };
+    }
 
-    this.slice_from = function(s) {
+    slice_from(s) {
         if (this.slice_check()) this.replace_s(this.bra, this.ket, s);
         return true;
-    };
+    }
 
-    this.slice_del = function() { return this.slice_from(""); };
-    this.slice_to = function() { return this.slice_check() ? this.current.slice(this.bra, this.ket) : ''; };
-    this.assign_to = function() { return this.current.slice(0, this.limit); };
-};
+    slice_del() { return this.slice_from(""); }
+    slice_to() { return this.slice_check() ? this.current.slice(this.bra, this.ket) : ''; }
+    assign_to() { return this.current.slice(0, this.limit); }
+}
 
 // ---------------------------
-// FrenchStemmer
+// FrenchStemmer modernisé
 // ---------------------------
-var FrenchStemmer = function() {
-    var base = new BaseStemmer();
+class FrenchStemmer {
+    constructor() {
+        this.base = new BaseStemmer();
+    }
 
-    // Liste des suffixes, groupes et fonctions internes
-    // (a_0 à a_8, g_v, g_keep_with_s, etc.) à copier depuis le Snowball français corrigé
-    // + fonctions r_prelude(), r_mark_regions(), r_standard_suffix(), r_verb_suffix(), etc.
-
-    // Stem function
-    this.stem = function(word) {
-        base.setCurrent(word);
-        // Étapes typiques : prelude -> mark_regions -> suffixes -> postlude
-        // Les fonctions internes sont appelées ici (r_prelude, r_mark_regions, r_standard_suffix, ...)
-        // Retourner le mot stemmé
-        return base.getCurrent();
-    };
-};
+    stem(word) {
+        this.base.setCurrent(word);
+        // ici appeler les fonctions r_prelude, r_mark_regions, r_standard_suffix...
+        return this.base.getCurrent();
+    }
+}
