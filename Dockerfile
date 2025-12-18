@@ -16,9 +16,5 @@ COPY . .
 # Exposer le port utilisé par FastAPI
 EXPOSE 8000
 
-# Vérifie que l'application se charge sans erreur
-#CMD ["python", "-c", "import main"]
-
-
 # Lancer FastAPI avec Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000","python", "-c", "import main"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
