@@ -159,7 +159,8 @@ FrenchStemmer = function() {
         ["\u00E9", -1, 2]
     ];
 
-    /** @const */ var a_7 = [
+    /** @const */ const a_7 = [
+
         ["e", -1, 3],
         ["I\u00E8re", 0, 2],
         ["i\u00E8re", 0, 2],
