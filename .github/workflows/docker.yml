@@ -35,7 +35,7 @@ jobs:
           docker build -t $IMAGE_NAME:$TAG .
           docker tag $IMAGE_NAME:$TAG ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:$TAG
 
-      # 5. Pousser l'image sur docker Hubb
+      # 5. Pousser l'image sur docker Hub
       - name: Push Docker image
         run: |
           IMAGE_NAME=fastapi-project
