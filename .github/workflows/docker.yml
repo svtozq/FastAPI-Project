@@ -30,7 +30,7 @@ jobs:
       # 4. Construire et taguer l'image §§
       - name: Build Docker image
         run: |
-          IMAGE_NAME=FastAPI-Project
+          IMAGE_NAME=fastapi-project
           TAG=${{ github.sha }}
           docker build -t $IMAGE_NAME:$TAG .
           docker tag $IMAGE_NAME:$TAG ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:$TAG
@@ -38,6 +38,6 @@ jobs:
       # 5. Pousser l'image sur docker Hubb
       - name: Push Docker image
         run: |
-          IMAGE_NAME=FastAPI-Project
+          IMAGE_NAME=fastapi-project
           TAG=${{ github.sha }}
           docker push ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:$TAG
