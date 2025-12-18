@@ -1,20 +1,20 @@
-# Image de base : Python officiel
+# Base image: Official Python
 FROM python:3.11-slim
 
-# Définir le dossier de travail dans le container
+# Define the working folder in the container
 WORKDIR /app
 
-# Copier le fichier des dépendances
+# Copy the dependencies file
 COPY requirements.txt .
 
-# Installer les dépendances Python
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier tout le code backend dans le container
+# Copy all the backend code into the container
 COPY . .
 
-# Exposer le port utilisé par FastAPI
+# Expose the port used by FastAPI
 EXPOSE 8000
 
-# Lancer FastAPI avec Uvicorn
+# Launching FastAPI with Uvicorn
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

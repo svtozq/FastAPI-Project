@@ -1,30 +1,30 @@
 name: SonarCloud Analysis
-# Nom du workflow affiché dans GitHub Actions.
+# Workflow name displayed in GitHub Actions.
 
 on:
   push:
     branches:
       - main
       - ScanCode
-# Déclenche le workflow à chaque push sur les branches "main" et "ScanCode".
+# Triggers the workflow on every push to the "main" and "ScanCode" branches.
 
 jobs:
   sonarcloud:
-     # Nom du job (utile si tu as plusieurs jobs dans le workflow)
+     # Job name (useful if you have multiple jobs in the workflow)
     name: SonarCloud
-    # Choisit la machine virtuelle sur laquelle le job va tourner (ici la dernière version Ubuntu)
+    # Chooses the virtual machine on which the job will run (here, the latest Ubuntu version)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        # Étape qui clone ton dépôt Git dans la VM pour que les fichiers soient disponibles
+        # This step clones your Git repository into the VM so that the files are available.
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-        # Installe Python 3.10 sur la VM
+        # Install Python 3.10 on the VM
 
       - name: Install dependencies
         run: |
