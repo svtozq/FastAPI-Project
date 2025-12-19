@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      #  récupérer le code
+      #  récupérer le code !
       - name: Checkout repository
         uses: actions/checkout@v3
 
