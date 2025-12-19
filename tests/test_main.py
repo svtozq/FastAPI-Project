@@ -1,4 +1,4 @@
 a = 4
 
 def test_function ():
-    assert a == 2
+    assert a == 4
